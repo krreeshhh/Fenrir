@@ -1,0 +1,92 @@
+"use client"
+
+import { useState, useEffect } from "react";
+import { Trophy, ArrowUp, ArrowDown, Minus, Star, Loader2 } from "lucide-react";
+import { cn } from "@/utils/cn";
+import { createClient } from "@/utils/supabase";
+
+export default function EmpLeaderboardPageManager() {
+   const [employees, setEmployees] = useState<any[]>([]);
+   const [loading, setLoading] = useState(true);
+   const supabase = createClient();
+
+   useEffect(() => {
+      fetchEmployees();
+   }, []);
+
+   const fetchEmployees = async () => {
+      setLoading(true);
+      const { data } = await supabase
+         .from('users_metadata')
+         .select('*')
+         .eq('role', 'employee')
+         .order('score', { ascending: false });
+
+      if (data) {
+         setEmployees(data.map((emp, index) => ({
+            ...emp,
+            rank: index + 1
+         })));
+      }
+      setLoading(false);
+   };
+
+   if (loading) return (
+      <div className="flex h-[60vh] items-center justify-center">
+         <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+   );
+
+   return (
+      <div className="space-y-6 pb-16">
+         <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-accent" />
+            <h2 className="text-xl font-bold">Employee Performance Index</h2>
+         </div>
+         <p className="text-sm text-muted-foreground -mt-2">Monitor employee growth, score output, and active project contributions.</p>
+
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {employees.slice(0, 3).map((u, i) => (
+               <div key={u.id} className={cn(
+                  "bg-background border rounded-lg p-4 text-center shadow-sm relative overflow-hidden",
+                  i === 0 ? "border-amber-400/50 bg-amber-400/5" : "border-secondary"
+               )}>
+                  {i === 0 && <Star className="h-5 w-5 text-amber-400 absolute top-2 right-2" />}
+                  <div className={cn(
+                     "h-10 w-10 rounded-lg mx-auto flex items-center justify-center font-black text-sm mb-2 shadow-sm",
+                     i === 0 ? "bg-amber-400 text-white" : i === 1 ? "bg-foreground text-background" : "bg-amber-700/80 text-white"
+                  )}>{u.full_name[0]}</div>
+                  <p className="text-sm font-bold truncate">{u.full_name}</p>
+                  <p className="text-xs font-black text-accent">{u.score.toLocaleString()}</p>
+               </div>
+            ))}
+         </div>
+
+         <div className="bg-background border border-secondary rounded-lg divide-y divide-secondary overflow-hidden shadow-sm">
+            <div className="p-4 flex items-center justify-between bg-secondary/10">
+               <h3 className="text-sm font-bold flex items-center gap-2"><Trophy className="h-4 w-4 text-accent" /> Full Rankings</h3>
+            </div>
+            {employees.length === 0 ? (
+               <div className="p-8 text-center text-sm text-muted-foreground">No personnel detected in database.</div>
+            ) : employees.map(user => (
+               <div key={user.id} className="flex items-center justify-between p-4 hover:bg-secondary/10 transition-colors group">
+                  <div className="flex items-center gap-4">
+                     <span className="text-sm font-black text-muted-foreground/30 w-6">{user.rank}</span>
+                     <div className={cn(
+                        "h-9 w-9 rounded-lg flex items-center justify-center font-black text-sm border-2 transition-all shadow-sm",
+                        user.rank <= 3 ? "bg-foreground text-background border-foreground text-white" : "bg-secondary border-secondary group-hover:bg-foreground group-hover:text-background"
+                     )}>{user.full_name[0]}</div>
+                     <div>
+                        <p className="text-sm font-bold group-hover:text-accent transition-colors">{user.full_name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{user.department || "Unit 4"}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <span className="text-sm font-black w-24 text-right pr-2">{user.score.toLocaleString()} pts</span>
+                  </div>
+               </div>
+            ))}
+         </div>
+      </div>
+   );
+}

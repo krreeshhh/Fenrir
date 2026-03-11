@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  
+  --font-sans: var(--font-inter);
+  
+  --radius-lg: 0.5rem; /* Standard rounded-lg */
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #3b82f6; /* Premium Blue */
+  --accent-foreground: #ffffff;
+  --border: #e2e8f0;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #111111;
+  --muted-foreground: #a1a1aa;
+  --accent: #2563eb; /* Deeper Premium Blue */
+  --accent-foreground: #ffffff;
+  --border: #27272a;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    @apply bg-background text-foreground font-sans transition-colors duration-300;
+  }
+}
+
+/* Premium UI Enhancements */
+.glass-panel {
+  @apply bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5;
+}
+
+.premium-card {
+  @apply bg-background border border-secondary shadow-sm transition-all duration-300 hover:shadow-xl hover:border-accent/40 rounded-lg;
+}
+
+.blue-glow {
+  @apply shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)];
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-accent;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-secondary-foreground/10 rounded-full hover:bg-secondary-foreground/20 transition-colors;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
