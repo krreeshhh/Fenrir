@@ -156,7 +156,7 @@ export default function Sidebar({ role, userName, isCompact = false, onToggleCom
         })}
       </nav>
 
-      <div className={cn("p-6 border-t border-secondary space-y-6 bg-secondary/10", isCompact ? "items-center" : "")}>
+      <div className={cn("p-4 border-t border-secondary space-y-6 bg-secondary/10", isCompact ? "flex flex-col items-center" : "")}>
         {userName && (
           <div className={cn("flex items-center gap-4 px-2", isCompact ? "justify-center" : "")}>
             <div className="h-8 w-8 min-w-8 rounded-lg bg-accent text-white flex items-center justify-center font-black shadow-lg border border-white/10">
@@ -170,12 +170,15 @@ export default function Sidebar({ role, userName, isCompact = false, onToggleCom
           </div>
         )}
 
-        <div className={cn("flex flex-col gap-3", isCompact ? "items-center" : "")}>
-          <div className={cn("grid gap-3", isCompact ? "grid-cols-1" : "grid-cols-2")}>
+        <div className={cn("flex flex-col gap-2 w-full", isCompact ? "items-center" : "")}>
+          <div className={cn("grid gap-2 w-full", isCompact ? "grid-cols-1" : "grid-cols-2")}>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               title={isCompact ? "Theme" : ""}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-secondary hover:border-accent transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              className={cn(
+                "flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-secondary hover:border-accent transition-all text-[10px] font-black uppercase tracking-widest shadow-sm",
+                isCompact ? "h-10 w-10 p-0 mx-auto" : ""
+              )}
             >
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {!isCompact && (theme === 'dark' ? "Day" : "Night")}
@@ -184,7 +187,10 @@ export default function Sidebar({ role, userName, isCompact = false, onToggleCom
             <button
               onClick={handleSignOut}
               title={isCompact ? "Sign Out" : ""}
-              className="flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-secondary hover:border-red-500 hover:text-red-500 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              className={cn(
+                "flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-secondary hover:border-red-500 hover:text-red-500 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm",
+                isCompact ? "h-10 w-10 p-0 mx-auto" : ""
+              )}
             >
               <LogOut className="h-4 w-4" />
               {!isCompact && "Exit"}
