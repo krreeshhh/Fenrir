@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Bot, Zap, Loader2 } from "lucide-react";
+import { MessageSquare, X, Send, Bot, Zap, Loader2, Sparkles, ShieldCheck } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export default function Chatbot() {
@@ -21,7 +21,7 @@ export default function Chatbot() {
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
-    
+
     const userMessage = input;
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setInput("");
@@ -44,95 +44,94 @@ export default function Chatbot() {
 
   return (
     <>
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-8 right-8 h-16 w-16 rounded-[24px] flex items-center justify-center shadow-3xl hover:scale-110 transition-all z-[60] border-4",
-          isOpen ? "bg-background text-foreground border-muted" : "bg-secondary-foreground text-secondary border-secondary/20"
+          "fixed bottom-8 right-8 h-16 w-16 rounded-xl flex items-center justify-center shadow-[0_20px_50px_rgba(59,130,246,0.5)] active:scale-95 transition-all z-[60] border border-white/20 group",
+          isOpen ? "bg-background text-foreground" : "bg-accent text-white"
         )}
       >
-        {isOpen ? <X className="h-7 w-7" /> : <MessageSquare className="h-7 w-7" />}
-        {!isOpen && <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>}
+        {isOpen ? <X className="h-7 w-7" /> : <MessageSquare className="h-7 w-7 group-hover:scale-110 transition-transform" />}
+        {!isOpen && (
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-accent"></span>
+          </span>
+        )}
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-28 right-8 w-[90vw] md:w-[400px] bg-background/95 backdrop-blur-2xl border-4 border-secondary/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] rounded-[40px] flex flex-col z-[60] overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
-           
-           {/* Header */}
-           <div className="p-8 bg-secondary-foreground text-secondary flex items-center justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-                 <Zap className="h-16 w-16" />
-              </div>
-              <div className="flex items-center gap-4 relative z-10">
-                 <div className="h-12 w-12 rounded-2xl bg-secondary text-secondary-foreground flex items-center justify-center border-2 border-secondary/20 shadow-inner">
-                    <Bot className="h-6 w-6" />
-                 </div>
-                 <div>
-                    <h4 className="font-black tracking-tighter text-lg leading-none">System Intelligence</h4>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mt-2 flex items-center gap-2">
-                       <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                       Node Active
-                    </p>
-                 </div>
-              </div>
-              <button onClick={() => setIsOpen(false)} className="bg-secondary/10 p-2 rounded-xl hover:bg-secondary/20 transition-colors">
-                 <X className="h-5 w-5" />
-              </button>
-           </div>
+        <div className="fixed bottom-28 right-8 w-[92vw] md:w-[420px] bg-background/90 backdrop-blur-3xl border border-secondary shadow-[0_40px_100px_-15px_rgba(0,0,0,0.5)] rounded-xl flex flex-col z-[60] overflow-hidden animate-in slide-in-from-bottom-8 duration-700 ring-1 ring-white/10">
 
-           {/* Messages Container */}
-           <div 
-             ref={scrollRef}
-             className="flex-1 p-8 overflow-y-auto max-h-[450px] min-h-[350px] flex flex-col gap-6 custom-scrollbar"
-           >
-              {messages.map((m, i) => (
-                <div key={i} className={cn(
-                  "flex flex-col gap-2 transition-all animate-in fade-in slide-in-from-bottom-2",
-                  m.role === 'user' ? "items-end" : "items-start"
+          {/* Header */}
+          <div className="p-6 bg-secondary text-foreground flex items-center justify-between relative overflow-hidden border-b border-secondary">
+            <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+              <Zap className="h-24 w-24 text-accent" />
+            </div>
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="h-12 w-12 rounded-xl bg-accent text-white flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-white/20 animate-pulse">
+                <Bot className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-black tracking-tighter text-base leading-none uppercase">PIVOT</h4>
+              </div>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="p-2.5 bg-background/50 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Messages Container */}
+          <div
+            ref={scrollRef}
+            className="flex-1 p-6 overflow-y-auto max-h-[480px] min-h-[380px] flex flex-col gap-6 scrollbar-hide"
+          >
+            {messages.map((m, i) => (
+              <div key={i} className={cn(
+                "flex flex-col gap-2 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500",
+                m.role === 'user' ? "items-end" : "items-start"
+              )}>
+                <div className={cn(
+                  "max-w-[88%] p-5 rounded-xl text-[13px] font-bold leading-relaxed shadow-sm border transition-all",
+                  m.role === 'user'
+                    ? "bg-foreground text-background self-end rounded-tr-none border-foreground shadow-lg"
+                    : "bg-secondary/40 text-foreground self-start rounded-tl-none border-secondary/50 backdrop-blur-md"
                 )}>
-                  <div className={cn(
-                    "max-w-[85%] p-5 rounded-[28px] text-sm font-medium leading-relaxed shadow-sm border",
-                    m.role === 'user' 
-                      ? "bg-secondary-foreground text-secondary self-end rounded-tr-none border-secondary-foreground" 
-                      : "bg-muted/50 text-foreground self-start rounded-tl-none border-muted"
-                  )}>
-                    {m.text}
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 px-2">
-                     {m.role === 'bot' ? 'System Intelligence' : 'Authorized User'}
-                  </span>
+                  {m.text}
                 </div>
-              ))}
-              {isTyping && (
-                <div className="flex items-center gap-3 p-5 bg-muted/20 rounded-[28px] rounded-tl-none w-fit border border-dashed border-muted">
-                   <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Analyzing Node...</span>
-                </div>
-              )}
-           </div>
-
-           {/* Input Area */}
-           <div className="p-8 border-t-2 border-muted bg-muted/10 relative">
-              <div className="flex gap-4 items-center">
-                 <input 
-                   type="text" 
-                   placeholder="Awaiting directive..." 
-                   className="flex-1 bg-background border-2 border-muted rounded-2xl px-6 py-4 text-sm font-bold focus:outline-none focus:border-secondary-foreground transition-all shadow-inner"
-                   value={input}
-                   onChange={(e) => setInput(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                 />
-                 <button 
-                   onClick={handleSend}
-                   disabled={isTyping || !input.trim()}
-                   className="h-14 w-14 bg-secondary-foreground text-secondary rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-xl"
-                 >
-                    <Send className="h-6 w-6" />
-                 </button>
               </div>
-           </div>
+            ))}
+            {isTyping && (
+              <div className="flex items-center gap-3 p-4 bg-accent/5 rounded-xl rounded-tl-none w-fit border border-accent/20 animate-pulse">
+                <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Analyzing Nodal Data...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="p-6 border-t border-secondary bg-background/50 backdrop-blur-md">
+            <div className="flex gap-3 items-center bg-secondary/30 rounded-xl p-1 border border-secondary group focus-within:border-accent/40 transition-all">
+              <input
+                type="text"
+                placeholder="Enter encrypted inquiry..."
+                className="flex-1 bg-transparent border-none px-5 py-3 text-xs font-black uppercase tracking-widest outline-none placeholder:text-muted-foreground/30"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              />
+              <button
+                onClick={handleSend}
+                disabled={isTyping || !input.trim()}
+                className="h-10 w-10 bg-accent text-white rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-30 disabled:scale-100 transition-all shadow-lg shadow-accent/20"
+              >
+                <Send className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
     </>
   );
 }

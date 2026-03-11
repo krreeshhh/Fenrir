@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ShieldAlert, Users, LayoutDashboard, ShieldCheck, Mail, Lock, ArrowUpRight, BarChart, LogIn } from "lucide-react"
+import { ShieldAlert, Users, LayoutDashboard, ShieldCheck, Mail, Lock, ArrowUpRight, BarChart, LogIn, Shield, Loader2, Zap } from "lucide-react"
 import { createClient } from "@/utils/supabase"
 import { cn } from "@/utils/cn"
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
     setTimeout(() => {
        const path = role.replace('_', '-');
        router.push(`/${path}`);
-    }, 400);
+    }, 600);
   };
 
 
@@ -34,78 +34,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-background border border-secondary rounded-2xl p-6 md:p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] p-6 relative overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-0 bg-background/40 backdrop-blur-2xl border border-white/5 rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 ring-1 ring-white/10">
            
-           {/* Logo & Intro */}
-           <div className="space-y-6 md:pr-8 md:border-r border-secondary h-full flex flex-col justify-center">
-              <div className="inline-flex items-center justify-center h-16 w-16 bg-accent text-white rounded-2xl shadow-sm mb-2">
-                 <ShieldAlert className="h-8 w-8" />
-              </div>
-              <div>
-                 <h1 className="text-3xl font-black mb-2">
-                    Pivot ERP
+           {/* Branding Panel */}
+           <div className="p-12 md:p-16 flex flex-col justify-between bg-gradient-to-br from-secondary/50 to-transparent border-r border-white/5 relative group">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,_var(--accent)_0%,_transparent_25%)] opacity-5 group-hover:opacity-10 transition-opacity duration-1000"></div>
+              
+              <div className="relative z-10">
+                 <div className="inline-flex items-center justify-center h-20 w-20 bg-accent text-white rounded-3xl shadow-[0_20px_40px_-5px_var(--accent)] mb-8 transform hover:scale-110 hover:rotate-3 transition-all duration-500 ring-1 ring-white/20">
+                    <ShieldAlert className="h-10 w-10 animate-pulse" />
+                 </div>
+                 <h1 className="text-5xl font-black tracking-tighter mb-4 leading-tight uppercase">
+                    Pivot <span className="text-accent underline decoration-accent/30 underline-offset-8">ERP</span>
                  </h1>
-                 <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
-                    Integrated enterprise resource planning with intelligent work tracking, resource deployment, and automated insights.
+                 <p className="text-muted-foreground text-base leading-relaxed max-w-sm font-medium opacity-80">
+                    Strategic command interface for integrated workforce orchestration, capital deployment, and automated insights.
                  </p>
               </div>
 
-              <div className="pt-6 mt-auto">
-                 <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    <span className="flex items-center gap-1.5 bg-secondary/30 px-3 py-1.5 rounded-lg border border-secondary"><Users className="h-3.5 w-3.5 text-accent" /> Personnel Hub</span>
-                    <span className="flex items-center gap-1.5 bg-secondary/30 px-3 py-1.5 rounded-lg border border-secondary"><LayoutDashboard className="h-3.5 w-3.5 text-accent" /> Global Matrix</span>
+              <div className="pt-12 relative z-10">
+                 <div className="flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                       <Users className="h-4 w-4 text-accent" /> Personnel
+                    </span>
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                       <LayoutDashboard className="h-4 w-4 text-accent" /> Matrix
+                    </span>
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                       <Zap className="h-4 w-4 text-accent" /> Real-time
+                    </span>
                  </div>
               </div>
            </div>
 
-           {/* Login Interface */}
-           <div className="space-y-8">
-              
-              {/* Manual Login */}
-              <div className="space-y-5">
-                 <div>
-                    <h2 className="text-xl font-bold">Sign In</h2>
-                    <p className="text-xs font-bold text-muted-foreground mt-1">Access your Pivot ERP workspace.</p>
-                 </div>
+           {/* Auth Panel */}
+           <div className="p-12 md:p-16 flex flex-col justify-center gap-12 bg-background/20 relative overflow-hidden">
+               {/* Quick Role Select */}
+               <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700 delay-200">
+                  <div>
+                     <h3 className="text-sm font-black uppercase tracking-[0.2em] text-accent">Nodal Access</h3>
+                     <p className="text-2xl font-black tracking-tight mt-1">Select Demographic Node</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <QuickCard title="Employee" icon={Users} onClick={() => handleQuickLogin('employee')} isLoading={loading === 'employee'} />
+                     <QuickCard title="Project Lead" icon={BarChart} onClick={() => handleQuickLogin('project_lead')} isLoading={loading === 'project_lead'} />
+                     <QuickCard title="Manager" icon={ShieldCheck} onClick={() => handleQuickLogin('manager')} isLoading={loading === 'manager'} />
+                     <QuickCard title="Unit Head" icon={ShieldAlert} onClick={() => handleQuickLogin('unit_head')} isLoading={loading === 'unit_head'} />
+                     <QuickCard title="System Admin" icon={Shield} onClick={() => handleQuickLogin('admin')} isLoading={loading === 'admin'} accent />
+                  </div>
+               </div>
 
-                 {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-bold">
-                       {error}
-                    </div>
-                 )}
+               {/* Secure Login */}
+               <div className="pt-12 border-t border-white/5 space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
+                  <div className="text-center md:text-left">
+                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground opacity-50">Global SSO</h2>
+                  </div>
 
+                  {error && (
+                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4" /> {error}
+                     </div>
+                  )}
 
-                 <button 
-                    onClick={handleGoogleLogin}
-                    disabled={!!loading}
-                    className="w-full py-3 bg-background border border-secondary rounded-lg font-bold text-xs uppercase tracking-widest hover:border-accent/40 transition-all flex items-center justify-center gap-2"
-                 >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24">
-                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Google
-                 </button>
-              </div>
-
-              {/* Quick Role Select */}
-              <div className="pt-6 border-t border-secondary space-y-4">
-                 <div>
-                    <h3 className="text-sm font-bold">Demo Environments</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Instant bypass, no password required</p>
-                 </div>
-                 
-                 <div className="grid grid-cols-2 gap-3">
-                    <QuickCard title="Employee" icon={Users} onClick={() => handleQuickLogin('employee')} isLoading={loading === 'employee'} />
-                    <QuickCard title="Project Lead" icon={BarChart} onClick={() => handleQuickLogin('project_lead')} isLoading={loading === 'project_lead'} />
-                    <QuickCard title="Manager" icon={ShieldCheck} onClick={() => handleQuickLogin('manager')} isLoading={loading === 'manager'} />
-                    <QuickCard title="Unit Head" icon={ShieldAlert} onClick={() => handleQuickLogin('unit_head')} isLoading={loading === 'unit_head'} />
-                 </div>
-              </div>
-
+                  <button 
+                     onClick={handleGoogleLogin}
+                     disabled={!!loading}
+                     className="group w-full py-5 bg-foreground text-background rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-500 flex items-center justify-center gap-4 relative overflow-hidden shadow-2xl active:scale-95"
+                  >
+                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                     <span className="relative z-10 flex items-center gap-4">
+                        <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        {loading === 'google' ? "Synchronizing Auth..." : "Authorize with Google"}
+                     </span>
+                  </button>
+               </div>
            </div>
 
         </div>
@@ -113,24 +127,35 @@ export default function LoginPage() {
   )
 }
 
-function QuickCard({ title, icon: Icon, onClick, isLoading }: any) {
+function QuickCard({ title, icon: Icon, onClick, isLoading, accent = false }: any) {
    return (
       <button 
          onClick={onClick}
          disabled={isLoading}
-         className="w-full flex items-center justify-between p-3 bg-secondary/10 border border-secondary rounded-lg hover:border-accent/40 hover:bg-secondary/30 transition-all group text-left"
-      >
-         <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-background border border-secondary flex items-center justify-center group-hover:border-accent/40 transition-colors">
-               <Icon className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
-            </div>
-            <span className="font-bold text-xs">{title}</span>
-         </div>
-         {isLoading ? (
-            <div className="h-3 w-3 border-[1.5px] border-muted border-t-accent rounded-full animate-spin"></div>
-         ) : (
-            <ArrowUpRight className="h-3 w-3 text-muted-foreground/50 group-hover:text-accent transition-colors" />
+         className={cn(
+            "w-full flex items-center justify-between p-5 bg-white/[0.03] border rounded-2xl transition-all group text-left relative overflow-hidden active:scale-95",
+            accent ? "border-accent/40 bg-accent/5" : "border-white/5 hover:border-accent/40 hover:bg-accent/5 hover:-translate-y-1"
          )}
+      >
+         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-10 translate-x-4 group-hover:translate-x-0 transition-all pointer-events-none">
+            <Icon className="h-12 w-12 text-accent" />
+         </div>
+         <div className="flex items-center gap-4 relative z-10">
+            <div className={cn(
+               "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 ring-1 ring-white/10 shadow-lg",
+               accent ? "bg-accent text-white" : "bg-background border border-white/5 group-hover:border-accent group-hover:bg-accent group-hover:text-white"
+            )}>
+               <Icon className="h-5 w-5" />
+            </div>
+            <span className="font-black text-[11px] uppercase tracking-widest">{title}</span>
+         </div>
+         <div className="relative z-10">
+            {isLoading ? (
+               <Loader2 className="h-4 w-4 animate-spin text-accent" />
+            ) : (
+               <ArrowUpRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-accent transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+            )}
+         </div>
       </button>
    )
 }
