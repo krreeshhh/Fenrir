@@ -39,56 +39,52 @@ export default function UnitHeadDashboard() {
 
    const fetchGlobalStats = async () => {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-         const { data: me } = await supabase
-            .from('users_metadata')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-         setUserData(me);
+      
+      try {
+         // 1. Initial auth check
+         const { data: { user } } = await supabase.auth.getUser();
+         
+         const promises = [
+           supabase.from('users_metadata').select('*', { count: 'exact', head: true }) as any,
+           supabase.from('projects').select('*, manager:manager_id(full_name)').order('created_at', { ascending: false }).limit(4) as any,
+           supabase.from('revenue_records').select('amount') as any,
+           supabase.from('users_metadata').select('*').order('score', { ascending: false }).limit(6) as any,
+           supabase.from('projects').select('completion_percentage') as any
+         ];
+
+         // If we have a user, fetch their metadata too
+         let userPromise = null;
+         if (user) {
+            userPromise = supabase.from('users_metadata').select('*').eq('id', user.id).single() as any;
+         }
+
+         const results = await Promise.all([...promises, ...(userPromise ? [userPromise] : [])]);
+         
+         const [{ count: userCount }, { data: projectsData, count: projCount }, { data: revenueData }, { data: topUsers }, { data: allProjects }] = results;
+         
+         if (userPromise) {
+            setUserData(results[results.length - 1].data);
+         }
+
+         const totalRev = revenueData?.reduce((sum: number, item: any) => sum + Number(item.amount), 0) || 0;
+
+         const avgPerf = allProjects && allProjects.length > 0
+            ? Math.round(allProjects.reduce((sum: number, p: any) => sum + Number(p.completion_percentage || 0), 0) / allProjects.length)
+            : 0;
+
+         setStats({
+            headcount: userCount || 0,
+            projectCount: projCount || 0,
+            totalRevenue: totalRev,
+            performanceIndex: avgPerf,
+            topPerformers: topUsers || [],
+            recentProjects: projectsData || []
+         });
+      } catch (error) {
+         console.error("Critical System Sync Error:", error);
+      } finally {
+         setLoading(false);
       }
-
-      const { count: userCount } = await supabase
-         .from('users_metadata')
-         .select('*', { count: 'exact', head: true });
-
-      const { data: projectsData, count: projCount } = await supabase
-         .from('projects')
-         .select('*, manager:manager_id(full_name)')
-         .order('created_at', { ascending: false })
-         .limit(4);
-
-      const { data: revenueData } = await supabase
-         .from('revenue_records')
-         .select('amount');
-
-      const totalRev = revenueData?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
-
-      const { data: topUsers } = await supabase
-         .from('users_metadata')
-         .select('*')
-         .order('score', { ascending: false })
-         .limit(6);
-
-      const { data: allProjects } = await supabase
-         .from('projects')
-         .select('completion_percentage');
-
-      const avgPerf = allProjects && allProjects.length > 0
-         ? Math.round(allProjects.reduce((sum, p) => sum + Number(p.completion_percentage || 0), 0) / allProjects.length)
-         : 0;
-
-      setStats({
-         headcount: userCount || 0,
-         projectCount: projCount || 0,
-         totalRevenue: totalRev,
-         performanceIndex: avgPerf,
-         topPerformers: topUsers || [],
-         recentProjects: projectsData || []
-      });
-
-      setLoading(false);
    };
 
    if (loading) return <DashboardSkeleton />;

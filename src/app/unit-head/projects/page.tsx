@@ -19,22 +19,32 @@ export default function ProjectsOverviewPage() {
       setLoading(true);
       setErrorMsg(null);
       try {
-         // 1. Fetch Projects
-         const { data: projectsData, error: projError } = await supabase
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false });
+         // 1. Parallel Fetch of Projects and Allocations
+         const [projectsRes, allocationsRes] = await Promise.all([
+            supabase
+               .from('projects')
+               .select('*')
+               .order('created_at', { ascending: false }) as any,
+            supabase
+               .from('checklist_allocations')
+               .select('employee_id, checklists!inner(project_id)') as any
+         ]);
+
+         const { data: projectsData, error: projError } = projectsRes;
+         const { data: allocations, error: allocError } = allocationsRes;
 
          if (projError) throw projError;
+         if (allocError) console.error("Allocations Fetch Error:", allocError);
+
          if (!projectsData || projectsData.length === 0) {
             setProjects([]);
             setLoading(false);
             return;
          }
 
-         // 2. Fetch User Metadata (Managers and Leads)
+         // 2. Fetch User Metadata (Managers and Leads) based on projects fetched
          const userIds = new Set<string>();
-         projectsData.forEach(p => {
+         projectsData.forEach((p: any) => {
             if (p.manager_id) userIds.add(p.manager_id);
             if (p.project_lead_id) userIds.add(p.project_lead_id);
          });
@@ -48,15 +58,8 @@ export default function ProjectsOverviewPage() {
             userMap = new Map((users || []).map(u => [u.id, u]));
          }
 
-         // 3. Fetch Checklist Allocations for team size
-         const { data: allocations, error: allocError } = await supabase
-            .from('checklist_allocations')
-            .select('employee_id, checklists!inner(project_id)');
-
-         if (allocError) console.error("Allocations Fetch Error:", allocError);
-
-         // 4. Combine data
-         const processedProjects = projectsData.map(proj => {
+         // 3. Combine data
+         const processedProjects = projectsData.map((proj: any) => {
             const teamNodesCount = new Set(
                (allocations || [])
                   .filter((a: any) => a.checklists?.project_id === proj.id)

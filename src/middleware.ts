@@ -54,47 +54,48 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // 1. Get Session instead of getUser (faster as it uses the JWT)
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   const url = new URL(request.url)
   
   // Public routes
   if (!user) {
-    if (url.pathname !== '/' && !url.pathname.startsWith('/auth')) {
+    if (url.pathname !== '/' && !url.pathname.startsWith('/auth') && !url.pathname.startsWith('/api/auth')) {
       return NextResponse.redirect(new URL('/', request.url))
     }
     return response
   }
 
-  // Get user role from metadata table
-  const { data: profile, error } = await supabase
-    .from('users_metadata')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  // 2. Optimized Role Retrieval: Check Auth Metadata first to avoid DB hit
+  // We only fetch from DB if metadata is missing (sync fallback)
+  let role = user.user_metadata?.role
 
-  if (error) {
-    console.error("Middleware fetch role error:", error.message)
+  if (!role) {
+     const { data: profile } = await supabase
+       .from('users_metadata')
+       .select('role')
+       .eq('id', user.id)
+       .single()
+     role = profile?.role || 'employee'
   }
 
-  // Fallback chain: DB profile -> Auth metadata -> Default "employee"
-  const rawRole = profile?.role || user.user_metadata?.role || 'employee'
-  
-  // Force lowercase and map both spaces and underscores to hyphens
-  const role = String(rawRole).toLowerCase()
-  const rolePath = role.replace(/[\s_]+/g, '-')
+  // Normalize role path
+  const rolePath = String(role).toLowerCase().replace(/[\s_]+/g, '-')
 
-  // Redirect if trying to access another role's pages
-  const roles = ['employee', 'project-lead', 'manager', 'unit-head']
-  const matchedRole = roles.find(r => url.pathname.toLowerCase().startsWith(`/${r}`))
-
-  if (matchedRole && matchedRole !== rolePath) {
-    return NextResponse.redirect(new URL(`/${rolePath}`, request.url))
-  }
-
-  // Redirect from root to dashboard if logged in
+  // 3. Early Exit for root to dashboard redirect
   if (url.pathname === '/') {
     return NextResponse.redirect(new URL(`/${rolePath}`, request.url))
+  }
+
+  // 4. Role Protection
+  const protectedRoles = ['employee', 'project-lead', 'manager', 'unit-head', 'admin']
+  const currentPathPrefix = url.pathname.split('/')[1]
+
+  if (protectedRoles.includes(currentPathPrefix) && currentPathPrefix !== rolePath) {
+     // If accessing someone else's area, redirect back to own dashboard
+     return NextResponse.redirect(new URL(`/${rolePath}`, request.url))
   }
 
   return response

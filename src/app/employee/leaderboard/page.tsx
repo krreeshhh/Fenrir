@@ -26,36 +26,51 @@ export default function LeaderboardPage() {
 
    const fetchLeaderboard = async () => {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
       
-      setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Employee");
+      try {
+         // 1. Parallel Fetch of user session and leaderboard data
+         const [authRes, leadRes] = await Promise.all([
+            supabase.auth.getUser(),
+            supabase
+               .from('users_metadata')
+               .select('*')
+               .eq('role', 'employee')
+               .order('score', { ascending: false })
+         ]);
 
-      const { data: leadData, error } = await supabase
-         .from('users_metadata')
-         .select('*')
-         .eq('role', 'employee')
-         .order('score', { ascending: false });
+         const user = authRes.data?.user;
+         const leadData = leadRes.data;
+         const error = leadRes.error;
 
-      if (error || !leadData) {
-         console.error(error);
+         if (!user) {
+            setLoading(false);
+            return;
+         }
+         
+         setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Employee");
+
+         if (error || !leadData) {
+            console.error(error);
+            setLoading(false);
+            return;
+         }
+
+         // Add rankings
+         const rankedUsers = leadData.map((u, index) => ({
+            ...u,
+            rank: index + 1,
+            department: u.role.replace('_', ' ').toUpperCase()
+         }));
+
+         setUsers(rankedUsers);
+         
+         const me = rankedUsers.find(u => u.id === user.id);
+         if (me) setMyRank(me);
+      } catch (err) {
+         console.error("Leaderboard Sync Failure:", err);
+      } finally {
          setLoading(false);
-         return;
       }
-
-      // Add rankings
-      const rankedUsers = leadData.map((u, index) => ({
-         ...u,
-         rank: index + 1,
-         department: u.role.replace('_', ' ').toUpperCase()
-      }));
-
-      setUsers(rankedUsers);
-      
-      const me = rankedUsers.find(u => u.id === user.id);
-      if (me) setMyRank(me);
-
-      setLoading(false);
    };
 
    const topThree = users.slice(0, 3);
