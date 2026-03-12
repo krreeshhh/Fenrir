@@ -16,7 +16,7 @@ export default function AuthCodeError() {
             </div>
 
             <div className="space-y-6">
-                <h1 className="text-3xl font-black tracking-tighter leading-tight">
+                <h1 className="text-3xl font-bold tracking-tighter leading-tight">
                     Code <span className="text-red-600">Sync Failure</span>
                 </h1>
                 <p className="text-muted-foreground font-medium text-xl leading-relaxed max-w-lg mx-auto">
@@ -25,7 +25,7 @@ export default function AuthCodeError() {
             </div>
 
             <div className="bg-muted/30 border-2 border-dashed border-muted rounded-[32px] p-10 text-left space-y-4">
-                <h3 className="font-black text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <RefreshCw className="h-4 w-4" /> Recommended Recovery:
                 </h3>
                 <ul className="space-y-3 text-sm font-bold opacity-80 list-disc pl-5">
@@ -38,7 +38,7 @@ export default function AuthCodeError() {
             <div className="flex flex-col md:flex-row gap-6 justify-center">
                 <Link 
                     href="/"
-                    className="px-12 py-6 bg-secondary-foreground text-secondary rounded-[32px] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-4 hover:scale-105 transition-all"
+                    className="px-12 py-6 bg-secondary-foreground text-secondary rounded-[32px] font-bold text-xs uppercase tracking-wider shadow-2xl flex items-center justify-center gap-4 hover:scale-105 transition-all"
                 >
                     <ArrowLeft className="h-4 w-4" /> Return to Terminal
                 </Link>

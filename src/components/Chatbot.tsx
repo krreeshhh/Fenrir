@@ -47,7 +47,7 @@ export default function Chatbot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-8 right-8 h-16 w-16 rounded-xl flex items-center justify-center shadow-[0_20px_50px_rgba(59,130,246,0.5)] active:scale-95 transition-all z-[60] border border-white/20 group",
+          "fixed bottom-4 right-4 sm:bottom-8 sm:right-8 h-14 w-14 sm:h-16 sm:w-16 rounded-xl flex items-center justify-center shadow-[0_20px_50px_rgba(59,130,246,0.5)] active:scale-95 transition-all z-[60] border border-white/20 group",
           isOpen ? "bg-background text-foreground" : "bg-accent text-white"
         )}
       >
@@ -61,7 +61,7 @@ export default function Chatbot() {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-28 right-8 w-[92vw] md:w-[420px] bg-background/90 backdrop-blur-3xl border border-secondary shadow-[0_40px_100px_-15px_rgba(0,0,0,0.5)] rounded-xl flex flex-col z-[60] overflow-hidden animate-in slide-in-from-bottom-8 duration-700 ring-1 ring-white/10">
+        <div className="fixed bottom-20 right-4 sm:bottom-28 sm:right-8 w-[calc(100vw-32px)] sm:w-[420px] bg-background/90 backdrop-blur-3xl border border-secondary shadow-[0_40px_100px_-15px_rgba(0,0,0,0.5)] rounded-xl flex flex-col z-[60] overflow-hidden animate-in slide-in-from-bottom-8 duration-700 ring-1 ring-white/10">
 
           {/* Header */}
           <div className="p-6 bg-secondary text-foreground flex items-center justify-between relative overflow-hidden border-b border-secondary">
@@ -73,7 +73,7 @@ export default function Chatbot() {
                 <Bot className="h-6 w-6" />
               </div>
               <div>
-                <h4 className="font-black tracking-tighter text-base leading-none uppercase">PIVOT</h4>
+                <h4 className="font-bold tracking-tight text-base leading-none uppercase">PIVOT</h4>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="p-2.5 bg-background/50 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all">
@@ -104,7 +104,7 @@ export default function Chatbot() {
             {isTyping && (
               <div className="flex items-center gap-3 p-4 bg-accent/5 rounded-xl rounded-tl-none w-fit border border-accent/20 animate-pulse">
                 <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Analyzing Nodal Data...</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-accent">Analyzing Nodal Data...</span>
               </div>
             )}
           </div>
@@ -115,7 +115,7 @@ export default function Chatbot() {
               <input
                 type="text"
                 placeholder="Enter encrypted inquiry..."
-                className="flex-1 bg-transparent border-none px-5 py-3 text-xs font-black uppercase tracking-widest outline-none placeholder:text-muted-foreground/30"
+                className="flex-1 bg-transparent border-none px-5 py-3 text-xs font-medium tracking-wide outline-none placeholder:text-muted-foreground/50"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}

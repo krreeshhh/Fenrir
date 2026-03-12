@@ -44,43 +44,46 @@ export default function LeadsLeaderboardPagePL() {
          </div>
          <p className="text-sm text-muted-foreground -mt-2">See how you rank among other project leads across the organization.</p>
 
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {leads.slice(0, 3).map((u, i) => (
                <div key={u.id} className={cn(
-                  "bg-background border rounded-lg p-4 text-center shadow-sm relative overflow-hidden",
-                  u.id === userId ? "border-accent/40 bg-accent/5 ring-1 ring-accent/20" : "border-secondary"
+                  "bg-background border rounded-xl p-6 text-center shadow-sm relative overflow-hidden transition-all hover:shadow-md",
+                  u.id === userId ? "border-accent/40 bg-accent/5 ring-1 ring-accent/20" : i === 0 ? "border-amber-400/50 hover:border-amber-400 bg-amber-400/5" : "border-secondary hover:border-accent/40"
                )}>
-                  {i === 0 && <div className="absolute top-0 right-0 p-2"><Trophy className="h-4 w-4 text-yellow-500" /></div>}
-                  <div className={cn("h-10 w-10 rounded-lg mx-auto flex items-center justify-center font-black text-sm mb-2",
-                     i === 0 ? "bg-accent text-white" : i === 1 ? "bg-foreground text-background" : "bg-secondary border-2 border-foreground"
+                  {i === 0 && <Trophy className="h-6 w-6 text-amber-500 absolute top-4 right-4" />}
+                  <div className={cn(
+                     "h-12 w-12 rounded-xl mx-auto flex items-center justify-center font-bold text-lg mb-3 shadow-sm",
+                     i === 0 ? "bg-amber-400 text-white" : i === 1 ? "bg-foreground text-background" : "bg-secondary/50 border border-secondary"
                   )}>{u.full_name[0]}</div>
-                  <p className="text-sm font-bold truncate">{u.full_name}</p>
-                  <p className="text-xs font-black text-accent">{u.score.toLocaleString()}</p>
+                  <p className="text-base font-bold truncate mb-1">{u.full_name}</p>
+                  <p className="text-sm font-bold text-accent">{u.score.toLocaleString()} <span className="text-xs text-muted-foreground uppercase font-bold pl-1">XP</span></p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase mt-1">Rank #{i + 1}</p>
                </div>
             ))}
          </div>
 
-         <div className="bg-background border border-secondary rounded-lg divide-y divide-secondary overflow-hidden">
-            <div className="p-4 bg-secondary/10">
+         <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary overflow-hidden shadow-sm">
+            <div className="p-5 flex items-center justify-between bg-secondary/10">
                <h3 className="text-sm font-bold flex items-center gap-2"><Trophy className="h-4 w-4 text-accent" /> All Lead Rankings</h3>
             </div>
             {leads.map(user => (
                <div key={user.id} className={cn(
-                  "flex items-center justify-between p-4 hover:bg-secondary/10 transition-colors group", 
-                  user.id === userId && "bg-accent/5 border-l-2 border-l-accent"
+                  "flex items-center justify-between p-5 hover:bg-secondary/10 transition-colors group", 
+                  user.id === userId && "bg-accent/5 border-l-4 border-l-accent"
                )}>
-                  <div className="flex items-center gap-4">
-                     <span className="text-sm font-black text-muted-foreground/30 w-6">{user.rank}</span>
-                     <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center font-black text-sm border-2 transition-all",
-                        user.rank === 1 ? "bg-accent text-white border-accent" : "bg-secondary border-secondary group-hover:bg-foreground group-hover:text-background"
+                  <div className="flex items-center gap-5">
+                     <span className="text-xs font-bold text-muted-foreground/40 w-6 text-center">{user.rank}</span>
+                     <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center font-bold text-sm border transition-all shadow-sm",
+                        user.rank <= 3 ? "bg-foreground text-background border-foreground text-white" : "bg-secondary/50 border-secondary group-hover:bg-foreground group-hover:text-background group-hover:border-foreground"
                      )}>{user.full_name[0]}</div>
                      <div>
                         <p className="text-sm font-bold group-hover:text-accent transition-colors">{user.full_name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{user.unit || "Operations"} Unit</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase mt-0.5">{user.unit || "Operations"} Unit</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-4">
-                     <span className="text-sm font-black w-24 text-right pr-2">{user.score.toLocaleString()} points</span>
+                     <span className="text-sm font-bold w-24 text-right pr-2">{user.score.toLocaleString()} <span className="text-[11px] text-muted-foreground uppercase pl-1 font-bold">XP</span></span>
                   </div>
                </div>
             ))}

@@ -42,40 +42,43 @@ export default function EmpLeaderboardPagePL() {
          </div>
          <p className="text-sm text-muted-foreground -mt-2">Track employee growth and score output across the organization.</p>
 
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {employees.slice(0, 3).map((u, i) => (
                <div key={u.id} className={cn(
-                  "bg-background border rounded-lg p-4 text-center shadow-sm relative overflow-hidden", 
-                  i === 0 ? "border-amber-400/50 bg-amber-400/5" : "border-secondary"
+                  "bg-background border rounded-xl p-6 text-center shadow-sm relative overflow-hidden transition-all hover:shadow-md",
+                  i === 0 ? "border-amber-400/50 hover:border-amber-400 bg-amber-400/5" : "border-secondary hover:border-accent/40"
                )}>
-                  {i === 0 && <Star className="h-4 w-4 text-amber-500 absolute top-2 right-2" />}
-                  <div className={cn("h-10 w-10 rounded-lg mx-auto flex items-center justify-center font-black text-sm mb-2",
+                  {i === 0 && <Star className="h-6 w-6 text-amber-500 absolute top-4 right-4" />}
+                  <div className={cn(
+                     "h-12 w-12 rounded-xl mx-auto flex items-center justify-center font-bold text-lg mb-3 shadow-sm",
                      i === 0 ? "bg-amber-400 text-white shadow-lg" : i === 1 ? "bg-foreground text-background" : "bg-primary/10 text-primary"
                   )}>{u.full_name[0]}</div>
-                  <p className="text-sm font-bold truncate">{u.full_name}</p>
-                  <p className="text-xs font-black text-accent">{u.score.toLocaleString()}</p>
+                  <p className="text-base font-bold truncate mb-1">{u.full_name}</p>
+                  <p className="text-sm font-bold text-accent">{u.score.toLocaleString()} <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider pl-1">XP</span></p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Rank #{i + 1}</p>
                </div>
             ))}
          </div>
 
-         <div className="bg-background border border-secondary rounded-lg divide-y divide-secondary overflow-hidden">
-            <div className="p-4 bg-secondary/10">
+         <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary overflow-hidden shadow-sm">
+            <div className="p-5 flex items-center justify-between bg-secondary/10">
                <h3 className="text-sm font-bold flex items-center gap-2"><Star className="h-4 w-4 text-accent" /> Full Rankings</h3>
             </div>
             {employees.map(user => (
-               <div key={user.id} className="flex items-center justify-between p-4 hover:bg-secondary/10 transition-colors group">
-                  <div className="flex items-center gap-4">
-                     <span className="text-sm font-black text-muted-foreground/30 w-6">{user.rank}</span>
-                     <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center font-black text-sm border-2 transition-all",
-                        user.rank <= 3 ? "bg-foreground text-background border-foreground text-white" : "bg-secondary border-secondary group-hover:bg-foreground group-hover:text-background"
+               <div key={user.id} className="flex items-center justify-between p-5 hover:bg-secondary/10 transition-colors group">
+                  <div className="flex items-center gap-5">
+                     <span className="text-xs font-bold text-muted-foreground/40 w-6 text-center">{user.rank}</span>
+                     <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center font-bold text-sm border transition-all shadow-sm",
+                        user.rank <= 3 ? "bg-foreground text-background border-foreground text-white" : "bg-secondary/50 border-secondary group-hover:bg-foreground group-hover:text-background group-hover:border-foreground"
                      )}>{user.full_name[0]}</div>
                      <div>
                         <p className="text-sm font-bold group-hover:text-accent transition-colors">{user.full_name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{user.department || "Engineering"}</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">{user.department || "Engineering"}</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-4">
-                     <span className="text-sm font-black w-24 text-right pr-2">{user.score.toLocaleString()} pts</span>
+                     <span className="text-sm font-bold w-24 text-right pr-2">{user.score.toLocaleString()} <span className="text-[11px] text-muted-foreground uppercase pl-1 font-bold">XP</span></span>
                   </div>
                </div>
             ))}

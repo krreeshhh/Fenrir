@@ -10,10 +10,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
-  
+
   --font-sans: var(--font-inter);
-  
-  --radius-lg: 0.5rem; /* Standard rounded-lg */
+
+  --radius-lg: 0.5rem;
+  /* Standard rounded-lg */
 }
 
 :root {
@@ -23,7 +24,8 @@
   --secondary-foreground: #18181b;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #3b82f6; /* Premium Blue */
+  --accent: #3b82f6;
+  /* Premium Blue */
   --accent-foreground: #ffffff;
   --border: #e2e8f0;
 }
@@ -35,7 +37,8 @@
   --secondary-foreground: #fafafa;
   --muted: #111111;
   --muted-foreground: #a1a1aa;
-  --accent: #2563eb; /* Deeper Premium Blue */
+  --accent: #2563eb;
+  /* Deeper Premium Blue */
   --accent-foreground: #ffffff;
   --border: #27272a;
 }
@@ -44,6 +47,7 @@
   * {
     border-color: var(--border);
   }
+
   body {
     @apply bg-background text-foreground font-sans transition-colors duration-300;
   }
@@ -59,7 +63,7 @@
 }
 
 .blue-glow {
-  @apply shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)];
+  box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.3);
 }
 
 .text-gradient {
@@ -82,14 +86,29 @@
 
 /* Animations */
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .animate-float {

@@ -87,16 +87,16 @@ export default function UserGovernancePage() {
 
    return (
       <div className="space-y-6 pb-16">
-         <div className="flex items-center justify-between">
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
                <Shield className="h-5 w-5 text-accent" />
-               <h2 className="text-xl font-black uppercase tracking-tight">Governance Registry</h2>
+               <h2 className="text-xl font-bold uppercase tracking-tight">Governance Registry</h2>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <button 
                   onClick={() => setShowAdmins(!showAdmins)}
                   className={cn(
-                      "flex items-center gap-2 px-4 py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm",
+                      "flex items-center justify-center gap-2 px-4 py-2 border rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-sm",
                       showAdmins ? "bg-accent text-white border-accent" : "bg-background border-secondary text-muted-foreground hover:border-accent/40"
                   )}
                 >
@@ -109,7 +109,7 @@ export default function UserGovernancePage() {
                       onChange={e => setSearchTerm(e.target.value)} 
                       type="text" 
                       placeholder="SEARCH SYSTEM NODES..." 
-                      className="bg-transparent text-[10px] font-black uppercase outline-none w-48 placeholder:text-muted-foreground/30 tracking-widest" 
+                      className="bg-transparent text-xs font-bold uppercase outline-none w-full sm:w-48 placeholder:text-muted-foreground/30 tracking-wider" 
                    />
                 </div>
             </div>
@@ -120,7 +120,7 @@ export default function UserGovernancePage() {
                "p-4 rounded-xl border flex items-center justify-between animate-in fade-in slide-in-from-top-2",
                message.type === 'success' ? "bg-green-500/10 border-green-500/20 text-green-500" : "bg-red-500/10 border-red-500/20 text-red-500"
             )}>
-               <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
+               <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
                   {message.type === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                   {message.text}
                </div>
@@ -128,13 +128,13 @@ export default function UserGovernancePage() {
             </div>
          )}
 
-         <div className="bg-background border border-secondary rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left">
+         <div className="bg-background border border-secondary rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full text-left min-w-[600px]">
                <thead className="bg-secondary/10 border-b border-secondary">
                   <tr>
-                     <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">User Identity Node</th>
-                     <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authority Protocol</th>
-                     <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Action Override</th>
+                     <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">User Identity Node</th>
+                     <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Authority Protocol</th>
+                     <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">Action Override</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-secondary">
@@ -142,12 +142,12 @@ export default function UserGovernancePage() {
                      <tr key={user.id} className="hover:bg-accent/5 transition-all group">
                         <td className="px-6 py-5">
                            <div className="flex items-center gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-black text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
+                              <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-bold text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
                                  {user.full_name[0]}
                               </div>
                               <div>
-                                 <p className="text-sm font-black uppercase tracking-tight">{user.full_name} {user.id === currentAdminId && <span className="ml-2 text-[8px] px-1.5 py-0.5 bg-accent text-white rounded">(YOU)</span>}</p>
-                                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 opacity-60">{user.email}</p>
+                                 <p className="text-sm font-bold uppercase tracking-tight">{user.full_name} {user.id === currentAdminId && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-accent text-white rounded">(YOU)</span>}</p>
+                                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 opacity-60">{user.email}</p>
                               </div>
                            </div>
                         </td>
@@ -157,7 +157,7 @@ export default function UserGovernancePage() {
                                  value={user.role} 
                                  onChange={e => updateRole(user.id, e.target.value)}
                                  disabled={updating === user.id}
-                                 className="bg-secondary/30 border border-secondary rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-accent/40 transition-all appearance-none pr-8 cursor-pointer disabled:opacity-50 shadow-inner"
+                                 className="bg-secondary/30 border border-secondary rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider outline-none focus:border-accent/40 transition-all appearance-none pr-8 cursor-pointer disabled:opacity-50 shadow-inner"
                               >
                                  {ROLES.map(r => (
                                     <option key={r} value={r}>{r.replace('_', ' ')}</option>
@@ -179,7 +179,7 @@ export default function UserGovernancePage() {
                      </tr>
                   ))}
                   {filtered.length === 0 && (
-                     <tr><td colSpan={3} className="p-16 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-30">No matching system nodes recorded</td></tr>
+                     <tr><td colSpan={3} className="p-16 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-30">No matching system nodes recorded</td></tr>
                   )}
                </tbody>
             </table>

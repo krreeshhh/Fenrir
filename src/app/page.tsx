@@ -29,6 +29,11 @@ export default function LoginPage() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.events',
+        }
       },
     });
   };
@@ -50,7 +55,7 @@ export default function LoginPage() {
                  <div className="inline-flex items-center justify-center h-20 w-20 bg-accent text-white rounded-3xl shadow-[0_20px_40px_-5px_var(--accent)] mb-8 transform hover:scale-110 hover:rotate-3 transition-all duration-500 ring-1 ring-white/20">
                     <ShieldAlert className="h-10 w-10 animate-pulse" />
                  </div>
-                 <h1 className="text-5xl font-black tracking-tighter mb-4 leading-tight uppercase">
+                 <h1 className="text-5xl font-bold tracking-tighter mb-4 leading-tight uppercase">
                     Pivot <span className="text-accent underline decoration-accent/30 underline-offset-8">ERP</span>
                  </h1>
                  <p className="text-muted-foreground text-base leading-relaxed max-w-sm font-medium opacity-80">
@@ -60,13 +65,13 @@ export default function LoginPage() {
 
               <div className="pt-12 relative z-10">
                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-wider text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
                        <Users className="h-4 w-4 text-accent" /> Personnel
                     </span>
-                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-wider text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
                        <LayoutDashboard className="h-4 w-4 text-accent" /> Matrix
                     </span>
-                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
+                    <span className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-wider text-white/60 hover:text-white hover:border-accent/50 transition-all cursor-default shadow-sm">
                        <Zap className="h-4 w-4 text-accent" /> Real-time
                     </span>
                  </div>
@@ -78,8 +83,8 @@ export default function LoginPage() {
                {/* Quick Role Select */}
                <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700 delay-200">
                   <div>
-                     <h3 className="text-sm font-black uppercase tracking-[0.2em] text-accent">Nodal Access</h3>
-                     <p className="text-2xl font-black tracking-tight mt-1">Select Demographic Node</p>
+                     <h3 className="text-sm font-bold uppercase tracking-wider text-accent">Nodal Access</h3>
+                     <p className="text-2xl font-bold tracking-tight mt-1">Select Demographic Node</p>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -94,11 +99,11 @@ export default function LoginPage() {
                {/* Secure Login */}
                <div className="pt-12 border-t border-white/5 space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
                   <div className="text-center md:text-left">
-                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground opacity-50">Global SSO</h2>
+                     <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground opacity-50">Global SSO</h2>
                   </div>
 
                   {error && (
-                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4" /> {error}
                      </div>
                   )}
@@ -106,7 +111,7 @@ export default function LoginPage() {
                   <button 
                      onClick={handleGoogleLogin}
                      disabled={!!loading}
-                     className="group w-full py-5 bg-foreground text-background rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-accent hover:text-white transition-all duration-500 flex items-center justify-center gap-4 relative overflow-hidden shadow-2xl active:scale-95"
+                     className="group w-full py-5 bg-foreground text-background rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all duration-500 flex items-center justify-center gap-4 relative overflow-hidden shadow-2xl active:scale-95"
                   >
                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                      <span className="relative z-10 flex items-center gap-4">
@@ -147,7 +152,7 @@ function QuickCard({ title, icon: Icon, onClick, isLoading, accent = false }: an
             )}>
                <Icon className="h-5 w-5" />
             </div>
-            <span className="font-black text-[11px] uppercase tracking-widest">{title}</span>
+            <span className="font-bold text-[11px] uppercase tracking-wider">{title}</span>
          </div>
          <div className="relative z-10">
             {isLoading ? (

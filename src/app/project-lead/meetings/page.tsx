@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react";
 import { 
   Calendar, 
   Video, 
@@ -8,129 +11,286 @@ import {
   Plus,
   ShieldAlert,
   Users,
-  VideoIcon
+  VideoIcon,
+  X,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { cn } from "@/utils/cn";
-
-const leadMeetings = [
-  { id: 1, title: "Resource Alignment Sync", time: "10:00 AM - 11:30 AM", date: "Today", type: "Google Meet", organizer: "Sarah Manager", status: "Critical" },
-  { id: 2, title: "Team Weekly Sync", time: "2:00 PM - 3:00 PM", date: "Today", type: "In Person", organizer: "Me", status: "Recurring" },
-  { id: 3, title: "Q3 Milestone Review", time: "11:00 AM - 12:30 PM", date: "Tomorrow", type: "Google Meet", organizer: "Katherine Head", status: "Evaluation" },
-];
+import { createClient } from "@/utils/supabase";
 
 export default function ProjectLeadMeetingsPage() {
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    date: '',
+    time: '',
+    duration: '30',
+    participants: [] as string[]
+  });
+
+  const supabase = createClient();
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    fetchData();
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isJoinable = (scheduledAt: string) => {
+     const startTime = new Date(scheduledAt).getTime();
+     const now = currentTime.getTime();
+     const fiveMinutesInMs = 5 * 60 * 1000;
+     return now >= (startTime - fiveMinutesInMs);
+  };
+
+  const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Clean up expired meetings before fetching
+    await fetch('/api/meetings/cleanup', { method: 'POST' });
+
+    // Fetch meetings
+    const { data: mData, error: mError } = await supabase
+      .from('meeting_participants')
+      .select(`
+        meeting:meetings (*)
+      `)
+      .eq('user_id', user.id);
+
+    if (mError) {
+      console.error('Lead Meetings Fetch Error:', mError);
+    }
+
+    if (mData) {
+      const validMeetings = mData.map(d => d.meeting).filter(Boolean);
+      setMeetings(validMeetings);
+    }
+
+    // Fetch employees for selection
+    const { data: eData } = await supabase
+      .from('users_metadata')
+      .select('id, full_name, email')
+      .eq('role', 'employee');
+    
+    if (eData) setEmployees(eData);
+    
+    setLoading(false);
+  };
+
+  const handleCreateMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const scheduledAt = new Date(`${formData.date}T${formData.time}`).toISOString();
+
+    try {
+      const resp = await fetch('/api/meetings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          scheduledAt,
+          durationMinutes: parseInt(formData.duration),
+          participants: formData.participants
+        })
+      });
+
+      if (resp.ok) {
+        setShowCreateModal(false);
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleParticipant = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      participants: prev.participants.includes(id)
+        ? prev.participants.filter(pid => pid !== id)
+        : [...prev.participants, id]
+    }));
+  };
+
   return (
     <div className="space-y-6 pb-16">
-      
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-secondary/50 pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-4 w-4 text-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-accent">Operational Schedule</span>
+          <div className="flex items-center gap-3">
+             <div className="h-10 w-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
+                <Calendar className="h-5 w-5 text-accent" />
+             </div>
+             <div>
+                <h2 className="text-2xl font-bold tracking-tight">Command Calendar</h2>
+                <p className="text-xs font-bold text-muted-foreground mt-0.5">Active Meeting Sessions</p>
+             </div>
           </div>
-          <h2 className="text-xl font-bold">Command Calendar</h2>
-          <p className="text-xs text-muted-foreground font-medium">Active meeting sessions for Project Lead node.</p>
         </div>
-        <button className="px-4 py-2 bg-foreground text-background rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2">
-          <Plus className="h-4 w-4" /> New Meeting
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center justify-center gap-2 px-6 py-2.5 bg-foreground text-background rounded-lg font-bold text-[11px] uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-sm active:scale-95 w-full md:w-auto"
+        >
+          <Plus className="h-4 w-4" /> Schedule Sync
         </button>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6">
-        
-        {/* Calendar Side Pane */}
-        <div className="w-full xl:w-[320px] space-y-6">
-           <div className="bg-background border border-secondary rounded-xl p-6 shadow-sm overflow-hidden relative group">
-              <div className="flex justify-between items-center mb-6">
-                 <div>
-                    <h3 className="text-sm font-bold uppercase tracking-tight">March 2026</h3>
-                 </div>
-                 <div className="flex gap-1">
-                    <button className="h-7 w-7 rounded-md hover:bg-secondary border border-secondary flex justify-center items-center transition-all"><ChevronLeft className="h-4 w-4" /></button>
-                    <button className="h-7 w-7 rounded-md hover:bg-secondary border border-secondary flex justify-center items-center transition-all"><ChevronRight className="h-4 w-4" /></button>
-                 </div>
-              </div>
-              
-              <div className="grid grid-cols-7 gap-y-4 text-center text-[9px] font-bold uppercase text-muted-foreground/60 mb-2 border-b border-secondary pb-2">
-                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i}>{d}</span>)}
-              </div>
-              
-              <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center text-xs">
-                 {Array.from({ length: 31 }).map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={cn(
-                        "h-8 flex justify-center items-center rounded-lg transition-all relative font-bold", 
-                        (i + 1) === 11 ? "bg-accent text-white shadow-md z-10" : "hover:bg-secondary/50",
-                        [10, 11, 14, 22].includes(i + 1) ? "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-0.5 after:rounded-full after:bg-accent" : ""
-                      )}
-                    >
-                       {i + 1}
-                    </div>
-                 ))}
-              </div>
-           </div>
-
-           <div className="bg-secondary/10 border border-secondary rounded-xl p-5 space-y-3">
-              <div className="flex items-center gap-2">
-                 <ShieldAlert className="h-4 w-4 text-accent" />
-                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Priority Alert</h4>
-              </div>
-              <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
-                <span className="font-bold text-foreground italic">SARAH MANAGER</span> has flagged the "Resource Alignment Sync" as critical for today.
-              </p>
-           </div>
-        </div>
-
-        {/* Schedule List */}
-        <div className="flex-1 space-y-3">
-           {leadMeetings.map((mtg) => (
-             <div key={mtg.id} className="p-5 bg-background border border-secondary rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-accent/30 transition-all">
-                <div className="flex-1">
-                   <div className="flex items-center gap-3 mb-2">
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 bg-secondary/50 rounded-md border border-secondary">{mtg.date}</span>
-                      <span className={cn(
-                        "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border",
-                        mtg.status === 'Critical' ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-accent/10 text-accent border-accent/20"
-                      )}>
-                        {mtg.status === 'Critical' && <ShieldAlert className="h-3 w-3" />}
-                        {mtg.status}
-                      </span>
-                   </div>
-                   <div>
-                      <h4 className="text-base font-bold group-hover:text-accent transition-colors">{mtg.title}</h4>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] font-bold text-muted-foreground">
-                         <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {mtg.time}</span>
-                         <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {mtg.organizer}</span>
-                         <span className="flex items-center gap-1.5">
-                            {mtg.type === "Google Meet" ? <VideoIcon className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />}
-                            {mtg.type}
+      <div className="flex flex-col xl:row gap-8">
+        <div className="flex-1 space-y-4">
+          <h3 className="text-sm font-bold flex items-center gap-2 text-foreground"><VideoIcon className="h-4 w-4 text-accent" /> Upcoming Synchronization Nodes</h3>
+          {loading ? (
+            <div className="p-12 border border-dashed border-secondary rounded-xl text-center flex flex-col items-center justify-center gap-3">
+               <Loader2 className="h-6 w-6 animate-spin text-accent" />
+               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Scanning Schedule...</p>
+            </div>
+          ) : meetings.length === 0 ? (
+            <div className="p-12 bg-background border border-secondary rounded-xl text-center shadow-sm">
+              <p className="text-sm font-medium text-muted-foreground">No active nodes in current window.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+               {meetings.sort((a,b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()).map((mtg) => (
+                 <div key={mtg.id} className="p-6 bg-background border border-secondary rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-accent/40 transition-all shadow-sm hover:shadow-md relative group">
+                   <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                         <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-secondary/50 text-foreground rounded-md border border-secondary">
+                           {new Date(mtg.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                         </span>
+                         <span className="text-xs font-bold uppercase px-2.5 py-1 bg-accent/10 text-accent rounded-md">
+                           Active Sync
                          </span>
                       </div>
+                      <div>
+                         <h4 className="text-lg font-bold tracking-tight group-hover:text-accent transition-colors">{mtg.title}</h4>
+                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-xs font-medium text-muted-foreground">
+                            <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {new Date(mtg.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className="flex items-center gap-1.5"><VideoIcon className="h-3.5 w-3.5" /> Remote Link</span>
+                         </div>
+                      </div>
                    </div>
-                </div>
-                
-                <div className="flex gap-2">
-                   {mtg.type === "Google Meet" ? (
-                      <button className="flex-1 md:flex-none px-4 py-2 bg-foreground text-background rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-accent transition-all">
-                         Join Meet
-                      </button>
+                   {isJoinable(mtg.scheduled_at) ? (
+                      <a 
+                        href={mtg.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-6 py-2.5 bg-foreground text-background border border-foreground rounded-lg font-bold text-[11px] uppercase hover:bg-accent hover:border-accent hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                      >
+                        Enter Node
+                      </a>
                    ) : (
-                      <button className="flex-1 md:flex-none px-4 py-2 bg-secondary/30 border border-secondary text-foreground rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-secondary transition-all">
-                         Details
-                      </button>
+                      <div className="px-6 py-2.5 bg-secondary/30 border border-secondary text-muted-foreground/60 rounded-lg font-bold text-[11px] uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
+                         <Clock className="h-3.5 w-3.5" /> Locked
+                      </div>
                    )}
-                </div>
-             </div>
-           ))}
-
-           <div className="p-8 border-2 border-dashed border-secondary rounded-xl flex flex-col items-center justify-center text-center opacity-40">
-              <Clock className="h-8 w-8 mb-2 text-muted-foreground" />
-              <p className="text-[10px] font-bold uppercase tracking-widest">End of Daily Schedule</p>
-           </div>
+                 </div>
+               ))}
+            </div>
+          )}
         </div>
-
       </div>
+
+      {/* Create Meeting Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+          <div className="relative bg-background border border-secondary rounded-2xl p-8 w-full max-w-lg shadow-xl animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setShowCreateModal(false)}
+              className="absolute top-5 right-5 p-2 bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-lg transition-colors border-none"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-8">
+              <h3 className="text-xl font-bold tracking-tight">Allocate Sync Node</h3>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Configure meeting parameters</p>
+            </div>
+
+            <form onSubmit={handleCreateMeeting} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mission Title</label>
+                <input 
+                  required
+                  value={formData.title}
+                  onChange={e => setFormData({...formData, title: e.target.value})}
+                  className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none placeholder:text-muted-foreground/40 transition-all shadow-sm"
+                  placeholder="e.g., Q3 Planning Session"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date Window</label>
+                  <input 
+                    required
+                    type="date"
+                    value={formData.date}
+                    onChange={e => setFormData({...formData, date: e.target.value})}
+                    className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Time Slot</label>
+                  <input 
+                    required
+                    type="time"
+                    value={formData.time}
+                    onChange={e => setFormData({...formData, time: e.target.value})}
+                    className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                   <span>Select Participants</span>
+                   <span className="text-accent">{formData.participants.length} Selected</span>
+                </label>
+                <div className="max-h-40 overflow-y-auto border border-secondary rounded-lg bg-secondary/5 p-2 grid grid-cols-1 gap-1">
+                  {employees.map(emp => (
+                    <button
+                      type="button"
+                      key={emp.id}
+                      onClick={() => toggleParticipant(emp.id)}
+                      className={cn(
+                        "flex justify-between items-center px-3 py-2 text-xs font-bold rounded-md transition-all text-left",
+                        formData.participants.includes(emp.id) ? "bg-accent/10 text-accent border border-accent/20" : "hover:bg-secondary text-foreground border border-transparent"
+                      )}
+                    >
+                      <span>{emp.full_name}</span>
+                      {formData.participants.includes(emp.id) && <CheckCircle2 className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                  {employees.length === 0 && (
+                     <div className="p-4 text-center text-xs text-muted-foreground">No eligible personnel found.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                 <button 
+                   disabled={submitting}
+                   className="w-full py-3.5 bg-foreground text-background rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
+                   {submitting ? "Processing..." : "Schedule Meeting"}
+                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

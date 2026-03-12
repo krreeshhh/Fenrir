@@ -1,28 +1,71 @@
 import { createClient } from '@/utils/supabase-server'
+import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 
 export async function POST() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || !session.provider_token) {
+    return NextResponse.json({ error: 'Authorize with Google to sync calendar.' }, { status: 401 })
   }
 
-  // In a real app:
-  // 1. Get the provider_token from supabase.auth.getSession()
-  // 2. Call Google Calendar API
-  // 3. Upsert events into the 'meetings' table
+  const auth = new google.auth.OAuth2()
+  auth.setCredentials({ access_token: session.provider_token })
 
-  // Simulation:
-  const mockEvents = [
-    { title: 'Project Hydra: Sprint Planning', scheduled_at: new Date(Date.now() + 86400000).toISOString(), duration_minutes: 60 },
-    { title: 'Resource Alignment', scheduled_at: new Date(Date.now() + 172800000).toISOString(), duration_minutes: 30 }
-  ];
+  const calendar = google.calendar({ version: 'v3', auth })
 
-  for (const event of mockEvents) {
-    await supabase.from('meetings').insert(event);
+  try {
+    // Fetch upcoming events from the primary calendar
+    const { data } = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: new Date().toISOString(),
+      maxResults: 15,
+      singleEvents: true,
+      orderBy: 'startTime',
+    })
+
+    const events = data.items || []
+    const syncedEvents = []
+
+    for (const event of events) {
+      if (!event.start?.dateTime) continue
+
+      const startTime = new Date(event.start.dateTime)
+      const endTime = event.end?.dateTime ? new Date(event.end.dateTime) : new Date(startTime.getTime() + 30 * 60000)
+      const duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000)
+
+      const meetingData = {
+        google_event_id: event.id,
+        title: event.summary || 'Untitled Mission Sync',
+        scheduled_at: startTime.toISOString(),
+        duration_minutes: duration,
+        link: event.hangoutLink || event.htmlLink || null
+      }
+
+      // Upsert by google_event_id
+      const { data: inserted, error: upsertError } = await supabase
+        .from('meetings')
+        .upsert(meetingData, { onConflict: 'google_event_id' })
+        .select()
+        .single()
+
+      if (!upsertError && inserted) {
+        syncedEvents.push(inserted)
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Synchronized ${syncedEvents.length} calendar nodes.`,
+      count: syncedEvents.length
+    })
+
+  } catch (error: any) {
+    console.error('Calendar Sync Error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to synchronize with Google Calendar.',
+      details: error.message 
+    }, { status: 500 })
   }
-
-  return NextResponse.json({ success: true, message: 'Google Calendar nodes synchronized.' });
 }

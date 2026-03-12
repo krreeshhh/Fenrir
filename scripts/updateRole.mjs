@@ -8,7 +8,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 });
 
 const emailToUpdate = 'summaadhaa@gmail.com';
-const newRole = 'admin';
+const newRole = 'unit_head';
 
 async function main() {
   console.log(`Looking for user with email: ${emailToUpdate}`);
