@@ -7,10 +7,10 @@ import {
    ArrowUpRight,
    Activity,
    TrendingUp,
-   Star,
-   Loader2
+   Star
 } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { LeaderboardSkeleton } from "@/components/Skeleton";
 
 export default function LeaderboardPage() {
    const supabase = createClient();
@@ -78,10 +78,7 @@ export default function LeaderboardPage() {
             </div>
 
             {loading ? (
-               <div className="h-64 flex flex-col items-center justify-center text-muted-foreground gap-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-accent" />
-                  <p className="text-xs font-bold uppercase tracking-widest">Querying Global Matrix...</p>
-               </div>
+               <LeaderboardSkeleton />
             ) : (
                <>
                   {/* My standing banner */}

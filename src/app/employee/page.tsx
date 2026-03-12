@@ -1,7 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import KanbanBoard from "@/components/KanbanBoard";
+import dynamic from 'next/dynamic';
+import { DashboardSkeleton } from "@/components/Skeleton";
+
+const KanbanBoard = dynamic(() => import("@/components/KanbanBoard"), {
+  loading: () => <div className="h-[500px] w-full skeleton rounded-xl" />,
+  ssr: false
+});
+
 import {
    BarChart3,
    TrendingUp,
@@ -83,18 +90,7 @@ export default function EmployeeDashboard() {
       setLoading(false);
    };
 
-   if (loading) {
-      return (
-         
-            <div className="flex items-center justify-center min-h-[60vh]">
-               <div className="flex flex-col items-center gap-4">
-                  <div className="h-10 w-10 border-4 border-secondary border-t-accent rounded-full animate-spin"></div>
-                  <p className="text-sm font-medium text-muted-foreground">Loading dashboard...</p>
-               </div>
-            </div>
-         
-      )
-   }
+   if (loading) return <DashboardSkeleton />;
 
    return (
       

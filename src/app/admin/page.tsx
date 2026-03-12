@@ -10,11 +10,11 @@ import {
    TrendingUp,
    Zap,
    Globe,
-   Loader2,
    UserPlus
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { DashboardSkeleton } from "@/components/Skeleton";
 
 export default function AdminDashboard() {
    const [stats, setStats] = useState({
@@ -51,11 +51,7 @@ export default function AdminDashboard() {
       setLoading(false);
    };
 
-   if (loading) return (
-      <div className="flex h-[60vh] items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-   );
+   if (loading) return <DashboardSkeleton />;
 
    return (
       <div className="space-y-6 pb-16">

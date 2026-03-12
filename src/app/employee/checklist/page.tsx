@@ -12,10 +12,10 @@ import {
    ClipboardCheck,
    Clock,
    ArrowUpRight,
-   Activity,
-   Loader2
+   Activity
 } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { ListSkeleton } from "@/components/Skeleton";
 
 export default function ChecklistPage() {
    const supabase = createClient();
@@ -155,10 +155,7 @@ export default function ChecklistPage() {
             </div>
 
             {loading ? (
-               <div className="h-64 flex flex-col items-center justify-center text-muted-foreground gap-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-accent" />
-                  <p className="text-xs font-bold uppercase tracking-widest">Integrating Live Sub-routines...</p>
-               </div>
+               <ListSkeleton />
             ) : !selectedProject ? (
                <div className="h-64 flex flex-col items-center justify-center text-muted-foreground gap-4 border border-secondary rounded-lg border-dashed">
                   <p className="text-sm font-bold">No active checklist allocations found.</p>

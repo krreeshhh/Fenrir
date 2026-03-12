@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Trophy, ShieldCheck, Loader2 } from "lucide-react";
+import { Trophy, ShieldCheck } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
 import { useUser } from "@/components/UserContext";
+import { SimpleLeaderboardSkeleton } from "@/components/Skeleton";
 
 export default function LeadsLeaderboardPagePL() {
    const [leads, setLeads] = useState<any[]>([]);
@@ -33,11 +34,7 @@ export default function LeadsLeaderboardPagePL() {
       setLoading(false);
    };
 
-   if (loading) return (
-      <div className="flex h-[60vh] items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-   );
+   if (loading) return <SimpleLeaderboardSkeleton />;
 
    return (
       <div className="space-y-6 pb-16">

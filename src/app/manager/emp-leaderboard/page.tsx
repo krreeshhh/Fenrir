@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Trophy, ArrowUp, ArrowDown, Minus, Star, Loader2 } from "lucide-react";
+import { Trophy, Star } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { SimpleLeaderboardSkeleton } from "@/components/Skeleton";
 
 export default function EmpLeaderboardPageManager() {
    const [employees, setEmployees] = useState<any[]>([]);
@@ -31,11 +32,7 @@ export default function EmpLeaderboardPageManager() {
       setLoading(false);
    };
 
-   if (loading) return (
-      <div className="flex h-[60vh] items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-   );
+   if (loading) return <SimpleLeaderboardSkeleton />;
 
    return (
       <div className="space-y-6 pb-16">

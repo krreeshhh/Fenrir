@@ -1,10 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import Sidebar from "@/components/Sidebar"
+import dynamic from 'next/dynamic'
 import { UserRole } from "@/utils/supabase"
 import { UserProvider, useUser } from "@/components/UserContext"
-import Chatbot from "./Chatbot"
+
+const Sidebar = dynamic(() => import("@/components/Sidebar"), {
+  ssr: false,
+  loading: () => <div className="w-72 h-full bg-background border-r border-secondary/50 skeleton" />
+});
+
+const Chatbot = dynamic(() => import("./Chatbot"), {
+  ssr: false
+});
 import { cn } from "@/utils/cn"
 import { Bell } from "lucide-react"
 

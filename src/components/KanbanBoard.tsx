@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { Calendar, MoreHorizontal, User, Clock, Zap, Target, Layers, ShieldCheck, ArrowUpRight, Activity } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { Skeleton } from "./Skeleton";
 
 export type TaskStatus = "not_started" | "ongoing" | "completed";
 
@@ -98,11 +99,19 @@ export default function KanbanBoard() {
 
   if (loading) {
      return (
-        <div className="flex items-center justify-center min-h-[400px]">
-           <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 border-4 border-muted border-t-secondary-foreground rounded-full animate-spin"></div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Operational Nodes...</p>
-           </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-6">
+           {[1, 2, 3].map((i) => (
+              <div key={i} className="flex flex-col rounded-[48px] border-4 border-secondary/5 bg-background shadow-inner h-[600px] p-8 space-y-6">
+                 <div className="flex items-center justify-between">
+                    <Skeleton className="h-10 w-32" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                 </div>
+                 <div className="space-y-4 pt-10">
+                    <Skeleton className="h-32 w-full rounded-[40px]" />
+                    <Skeleton className="h-32 w-full rounded-[40px]" />
+                 </div>
+              </div>
+           ))}
         </div>
      )
   }

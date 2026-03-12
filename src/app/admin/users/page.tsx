@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { ListSkeleton } from "@/components/Skeleton";
 
 const ROLES = ['employee', 'project_lead', 'manager', 'unit_head', 'admin'];
 
@@ -82,11 +83,7 @@ export default function UserGovernancePage() {
       return matchesSearch && matchesAdminFilter;
    });
 
-   if (loading) return (
-      <div className="flex h-[60vh] items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-   );
+   if (loading) return <ListSkeleton />;
 
    return (
       <div className="space-y-6 pb-16">

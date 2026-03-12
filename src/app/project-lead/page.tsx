@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { DashboardSkeleton } from "@/components/Skeleton";
 
 export default function ProjectLeadDashboard() {
    const [stats, setStats] = useState({
@@ -106,18 +107,7 @@ export default function ProjectLeadDashboard() {
       setLoading(false);
    };
 
-   if (loading) {
-      return (
-         
-            <div className="flex items-center justify-center min-h-[60vh]">
-               <div className="flex flex-col items-center gap-4">
-                  <div className="h-10 w-10 border-4 border-secondary border-t-accent rounded-full animate-spin"></div>
-                  <p className="text-sm font-medium text-muted-foreground">Loading dashboard...</p>
-               </div>
-            </div>
-         
-      )
-   }
+   if (loading) return <DashboardSkeleton />;
 
    return (
       
