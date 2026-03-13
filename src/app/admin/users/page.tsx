@@ -18,6 +18,7 @@ import {
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
 import { ListSkeleton } from "@/components/Skeleton";
+import { Avatar } from "@/components/Avatar";
 
 const ROLES = ['employee', 'project_lead', 'manager', 'unit_head', 'admin'];
 
@@ -163,9 +164,7 @@ export default function UserGovernancePage() {
                      <tr key={user.id} className="hover:bg-accent/5 transition-all group">
                         <td className="px-6 py-5">
                            <div className="flex items-center gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-bold text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
-                                 {user.full_name[0]}
-                              </div>
+                              <Avatar name={user.full_name} avatarUrl={user.avatar_url} size="sm" />
                                <div>
                                   {editingNameId === user.id ? (
                                      <div className="flex items-center gap-2">

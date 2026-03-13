@@ -56,6 +56,7 @@ export default function ChecklistPage() {
          .select(`
             id,
             status,
+            verified,
             difficulty_rating,
             score_awarded,
             checklists (
@@ -113,6 +114,7 @@ export default function ChecklistPage() {
             title: checklist?.title || "Untitled Directive",
             description: checklist?.description || "No specific mission parameters provided for this node.",
             status: allocation.status,
+            verified: allocation.verified || false,
             difficulty: allocation.difficulty_rating || "Medium",
             impact: allocation.score_awarded || 100
          });
@@ -130,7 +132,9 @@ export default function ChecklistPage() {
 
       setLoading(false);
    };
-   const toggleTask = async (alloc_id: string, currentStatus: string) => {
+   const toggleTask = async (alloc_id: string, currentStatus: string, isVerified: boolean) => {
+      if (currentStatus === 'completed' && isVerified) return;
+
       const isCompleted = currentStatus === 'completed';
       const newStatus = isCompleted ? 'ongoing' : 'completed';
 
@@ -144,9 +148,16 @@ export default function ChecklistPage() {
       }
 
       // Update DB for task
+      const updatePayload: any = { status: newStatus };
+      if (!isCompleted) {
+         updatePayload.completed_at = new Date().toISOString();
+      } else {
+         updatePayload.completed_at = null;
+      }
+
       await supabase
          .from('checklist_allocations')
-         .update({ status: newStatus })
+         .update(updatePayload)
          .eq('id', alloc_id);
 
       // Recursive update of local projectsMap for column consistency
@@ -275,7 +286,7 @@ export default function ChecklistPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {/* Newly Allocated Section */}
                <KanbanColumn
-                  title="Freshly Added"
+                  title="Freshly Allocated"
                   projects={newlyAllocated}
                   icon={<Zap className="h-4 w-4 text-accent" />}
                   onSelect={setSelectedProjectId}
@@ -284,7 +295,7 @@ export default function ChecklistPage() {
 
                {/* Ongoing Operations Section */}
                <KanbanColumn
-                  title="Actively Working"
+                  title="Ongoing"
                   projects={ongoingProjects}
                   icon={<Activity className="h-4 w-4 text-amber-500" />}
                   onSelect={setSelectedProjectId}
@@ -293,7 +304,7 @@ export default function ChecklistPage() {
 
                {/* Finished Section */}
                <KanbanColumn
-                  title="Finished"
+                  title="Completed"
                   projects={completedProjects}
                   icon={<CheckCircle2 className="h-4 w-4 text-green-500" />}
                   onSelect={setSelectedProjectId}
@@ -358,12 +369,14 @@ export default function ChecklistPage() {
                            >
                               <div className="flex items-start gap-5">
                                  <button
-                                    onClick={() => toggleTask(task.alloc_id, isChecked ? 'completed' : 'ongoing')}
+                                    onClick={() => toggleTask(task.alloc_id, task.status, task.verified)}
+                                    disabled={task.status === 'completed' && task.verified}
                                     className={cn(
                                        "h-7 w-7 rounded-lg flex items-center justify-center transition-all border shrink-0 mt-1",
                                        isChecked
                                           ? "bg-accent border-accent text-white shadow-lg shadow-accent/20"
-                                          : "bg-secondary/40 border-secondary hover:border-accent"
+                                          : "bg-secondary/40 border-secondary hover:border-accent",
+                                       task.status === 'completed' && task.verified && "opacity-50 cursor-not-allowed"
                                     )}
                                  >
                                     <CheckCircle2 className={cn("h-5 w-5", isChecked ? "scale-110" : "scale-0")} />
@@ -372,9 +385,19 @@ export default function ChecklistPage() {
                                  <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start">
                                        <div>
-                                          <p className={cn("text-base font-bold uppercase tracking-tight transition-all", isChecked && "text-muted-foreground line-through")}>
+                                          <p className={cn("text-base font-bold uppercase tracking-tight transition-all", task.status === 'completed' && task.verified && "text-muted-foreground line-through")}>
                                              {task.title}
                                           </p>
+                                          {task.status === 'completed' && !task.verified && (
+                                             <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                                Updated but pending verification
+                                             </span>
+                                          )}
+                                          {task.status === 'completed' && task.verified && (
+                                             <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-wider text-green-500 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">
+                                                Verified & Completed
+                                             </span>
+                                          )}
                                           <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-relaxed">
                                              MISSION DIRECTIVE: {task.description}
                                           </p>

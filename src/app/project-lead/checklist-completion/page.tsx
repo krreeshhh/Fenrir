@@ -99,7 +99,7 @@ export default function ChecklistCompletionPage() {
          .from('checklist_allocations')
          .update({
             verified: true,
-            status: 'verified' // Explicitly update status to verified as well
+            status: 'completed' // Explictly mark as formally completed upon validation
          })
          .eq('id', id);
 

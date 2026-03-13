@@ -83,6 +83,7 @@ export default function ProjectLeadDashboard() {
           checklists!inner (title, project_id)
         `)
          .in('checklists.project_id', projectIds)
+         .eq('status', 'completed')
          .eq('verified', false)
          .limit(5);
 

@@ -27,7 +27,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Calendar
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useTheme } from "next-themes";
@@ -76,11 +77,15 @@ const navItemsByRole: Record<UserRole, { label: string, href: string, icon: any 
     { label: "Dashboard", href: "/unit-head", icon: LayoutDashboard },
     { label: "All Employees", href: "/unit-head/employees", icon: Users },
     { label: "Projects Overview", href: "/unit-head/projects", icon: BarChart },
+    { label: "Meetings", href: "/unit-head/meetings", icon: Calendar },
+    { label: "Mail", href: "/unit-head/mail", icon: Mail },
     { label: "Profile", href: "/unit-head/profile", icon: User },
   ],
   admin: [
     { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "User Governance", href: "/admin/users", icon: Shield },
+    { label: "Meetings", href: "/admin/meetings", icon: Calendar },
+    { label: "Mail", href: "/admin/mail", icon: Mail },
     { label: "Profile", href: "/admin/profile", icon: User },
   ],
 };

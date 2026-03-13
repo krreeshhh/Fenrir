@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
+import { Avatar } from "@/components/Avatar";
 
 const MANAGEABLE_ROLES = ['employee', 'project_lead', 'manager', 'unit_head'];
 
@@ -57,6 +58,7 @@ export default function UnitHeadEmployeesPage() {
                name: u.full_name,
                email: u.email,
                role: u.role || 'Personnel',
+               avatar_url: u.avatar_url || null,
                project: u.checklist_allocations?.[0]?.checklists?.projects?.name || "Unassigned Cluster",
                status: 'Active',
                load,
@@ -131,9 +133,7 @@ export default function UnitHeadEmployeesPage() {
                         <td className="px-6 py-5">
                            <div className="flex items-center gap-4">
                               <span className="text-xs font-bold text-muted-foreground/30 w-4">{emp.rank}</span>
-                              <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-bold text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
-                                 {emp.name[0]}
-                              </div>
+                              <Avatar name={emp.name} avatarUrl={emp.avatar_url} size="sm" />
                               <div>
                                  <p className="text-sm font-bold uppercase tracking-tight">{emp.name}</p>
                                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 opacity-60">Empid:{emp.id.slice(0, 4).toUpperCase()}</p>

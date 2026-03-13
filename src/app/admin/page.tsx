@@ -7,10 +7,15 @@ import {
    ShieldCheck,
    ShieldAlert,
    Activity,
-   TrendingUp,
-   Zap,
    Globe,
-   UserPlus
+   Zap,
+   UserPlus,
+   Mail,
+   Calendar,
+   Video,
+   Clock,
+   MessageSquare,
+   ChevronRight
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
@@ -23,6 +28,8 @@ export default function AdminDashboard() {
       recentActivity: [] as any[]
    });
    const [loading, setLoading] = useState(true);
+   const [recentMails, setRecentMails] = useState<any[]>([]);
+   const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
    const supabase = createClient();
 
    useEffect(() => {
@@ -31,7 +38,7 @@ export default function AdminDashboard() {
 
    const fetchAdminStats = async () => {
       setLoading(true);
-      
+
       const { data: users, count } = await supabase
          .from('users_metadata')
          .select('*', { count: 'exact' });
@@ -45,8 +52,33 @@ export default function AdminDashboard() {
          setStats({
             totalUsers: count || 0,
             roleDistribution: distribution,
-            recentActivity: users.slice(0, 5) // Mocking activity with recent users
+            recentActivity: users.slice(0, 5)
          });
+
+         // Fetch admin's own mail & meetings
+         const { data: { user } } = await supabase.auth.getUser();
+         if (user) {
+            const [mailRes, mtgRes] = await Promise.all([
+               supabase
+                  .from('messages')
+                  .select('*, sender:sender_id(full_name, role)')
+                  .eq('receiver_id', user.id)
+                  .order('sent_at', { ascending: false })
+                  .limit(4),
+               supabase
+                  .from('meeting_participants')
+                  .select('meeting:meetings(*)')
+                  .eq('user_id', user.id)
+            ]);
+            setRecentMails(mailRes.data || []);
+            const now = new Date();
+            const upcoming = (mtgRes.data || [])
+               .map((d: any) => d.meeting)
+               .filter((m: any) => m && new Date(m.scheduled_at) >= now)
+               .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+               .slice(0, 4);
+            setUpcomingMeetings(upcoming);
+         }
       }
       setLoading(false);
    };
@@ -55,45 +87,17 @@ export default function AdminDashboard() {
 
    return (
       <div className="space-y-6 pb-16">
-         {/* Admin Hero */}
-         <div className="bg-background border border-secondary rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between shadow-sm relative overflow-hidden group gap-6">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-150 transition-all duration-700 pointer-events-none">
-               <Shield className="h-40 w-40 text-accent" />
-            </div>
-            <div className="text-center sm:text-left z-10">
-               <p className="text-xs font-bold text-accent uppercase tracking-wider mb-2">Central Governance Node</p>
-               <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Administrative Override</h2>
-               <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4">
-                  <div className="flex items-center gap-2">System: <span className="text-green-500">OPERATIONAL</span></div>
-                  <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-secondary" />
-                  <div className="flex items-center gap-2">Authority: <span className="text-foreground">LVL 9</span></div>
-               </div>
-            </div>
-            <div className="flex items-center gap-8 sm:gap-12 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-secondary pt-6 sm:pt-0 sm:pl-12">
-               <div className="text-left sm:text-right">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">UPTIME</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-accent tracking-tighter">99.99%</p>
-               </div>
-               <div className="text-right">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">HEALTH</p>
-                  <span className="inline-flex items-center gap-2 px-2.5 py-1 bg-green-500/10 text-green-500 rounded-lg border border-green-500/20 font-bold text-[11px] uppercase tracking-wider leading-none">
-                     <ShieldCheck className="h-3 w-3" /> Secure
-                  </span>
-               </div>
-            </div>
-         </div>
 
          {/* Stats Grid */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <QuickStat label="Total Nodes" value={stats.totalUsers} icon={Users} />
             <QuickStat label="Unit Heads" value={stats.roleDistribution.unit_head || 0} icon={Globe} accent />
             <QuickStat label="Managers" value={stats.roleDistribution.manager || 0} icon={Zap} />
-            <QuickStat label="System Load" value="LOW" icon={Activity} green />
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3 space-y-6">
-               {/* Role Distribution Visualization (Simplified) */}
+               {/* Role Distribution */}
                <div className="space-y-4">
                   <h3 className="text-sm font-bold uppercase tracking-wider">Network Architecture</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -108,10 +112,10 @@ export default function AdminDashboard() {
                      <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
                         <UserPlus className="h-5 w-5 text-accent" /> Recent Node Accessions
                      </h3>
-                     <button onClick={() => window.location.href = '/admin/users'} className="text-xs font-bold text-accent hover:underline uppercase tracking-wider">Audit Registry</button>
+                     <button onClick={() => window.location.href = '/admin/users'} className="text-xs font-bold text-accent hover:underline uppercase tracking-wider flex items-center gap-1">Audit Registry <ChevronRight className="h-3 w-3" /></button>
                   </div>
                   <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary overflow-hidden shadow-sm">
-                     {stats.recentActivity.map((user, i) => (
+                     {stats.recentActivity.map((user) => (
                         <div key={user.id} className="flex items-center justify-between p-5 hover:bg-secondary/10 transition-colors group">
                            <div className="flex items-center gap-4">
                               <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-bold text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
@@ -122,29 +126,74 @@ export default function AdminDashboard() {
                                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5 opacity-60">ID: PVT-{user.id.slice(0, 8).toUpperCase()}</p>
                               </div>
                            </div>
-                           <div className="text-right">
-                              <span className="text-xs font-bold bg-secondary/50 text-foreground border border-secondary px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-inner">
-                                 {user.role?.replace('_', ' ')}
-                              </span>
-                           </div>
+                           <span className="text-xs font-bold bg-secondary/50 text-foreground border border-secondary px-3 py-1.5 rounded-lg uppercase tracking-wider">{user.role?.replace('_', ' ')}</span>
                         </div>
                      ))}
                   </div>
+               </div>
+
+               {/* Meetings Overview */}
+               <div className="bg-background border border-secondary rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-secondary flex items-center justify-between">
+                     <h3 className="text-sm font-bold flex items-center gap-2"><Video className="h-4 w-4 text-accent" /> Upcoming Meetings</h3>
+                     <button onClick={() => window.location.href = '/admin/meetings'} className="text-xs font-bold text-accent hover:underline uppercase tracking-wider flex items-center gap-1">View All <ChevronRight className="h-3 w-3" /></button>
+                  </div>
+                  {upcomingMeetings.length === 0 ? (
+                     <div className="p-8 text-center">
+                        <Calendar className="h-7 w-7 text-muted-foreground/20 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No upcoming meetings</p>
+                        <button onClick={() => window.location.href = '/admin/meetings'} className="mt-2 text-xs font-bold text-accent hover:underline">Schedule one</button>
+                     </div>
+                  ) : (
+                     <div className="divide-y divide-secondary">
+                        {upcomingMeetings.map(mtg => (
+                           <div key={mtg.id} className="p-4 flex items-center gap-4 hover:bg-secondary/10 transition-colors group">
+                              <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                                 <Video className="h-4 w-4 text-accent" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                 <p className="text-sm font-bold truncate group-hover:text-accent transition-colors">{mtg.title}</p>
+                                 <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
+                                    <Clock className="h-3 w-3" />
+                                    {new Date(mtg.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                 </p>
+                              </div>
+                              <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 border border-secondary rounded-md text-muted-foreground shrink-0">{mtg.duration_minutes ?? 30}m</span>
+                           </div>
+                        ))}
+                     </div>
+                  )}
                </div>
             </div>
 
             <div className="space-y-6">
                <h3 className="text-sm font-bold uppercase tracking-wider">System Protocol</h3>
-               <div className="bg-foreground text-background rounded-2xl p-8 text-center shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-700">
-                     <ShieldAlert className="h-20 w-20 text-accent" />
+
+               {/* Mail Overview */}
+               <div className="bg-background border border-secondary rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-secondary flex items-center justify-between">
+                     <h3 className="text-sm font-bold flex items-center gap-2"><Mail className="h-4 w-4 text-accent" /> Recent Inbox</h3>
+                     <button onClick={() => window.location.href = '/admin/mail'} className="text-xs font-bold text-accent hover:underline uppercase tracking-wider flex items-center gap-1">Open <ChevronRight className="h-3 w-3" /></button>
                   </div>
-                  <ShieldCheck className="h-12 w-12 mx-auto mb-4 animate-float text-accent" />
-                  <h5 className="font-bold text-xs uppercase tracking-wider">Governance Module</h5>
-                  <p className="text-[11px] font-bold opacity-60 mt-4 uppercase tracking-wider leading-relaxed">Centralized role management and system-wide overrides active.</p>
-                  <button className="mt-8 w-full py-4 bg-accent text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-accent/20 hover:scale-105 active:scale-95 transition-all">
-                     System Maintenance
-                  </button>
+                  {recentMails.length === 0 ? (
+                     <div className="p-8 text-center">
+                        <MessageSquare className="h-7 w-7 text-muted-foreground/20 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No messages yet</p>
+                     </div>
+                  ) : (
+                     <div className="divide-y divide-secondary">
+                        {recentMails.map(mail => (
+                           <div key={mail.id} className="p-4 flex items-start gap-3 hover:bg-secondary/10 transition-colors cursor-pointer" onClick={() => window.location.href = '/admin/mail'}>
+                              <div className={cn("h-2 w-2 rounded-full mt-2 shrink-0", !mail.is_read ? "bg-accent" : "bg-transparent")} />
+                              <div className="flex-1 min-w-0">
+                                 <p className={cn("text-xs font-bold truncate", !mail.is_read ? "text-foreground" : "text-muted-foreground")}>{mail.subject}</p>
+                                 <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{mail.sender?.full_name} · {mail.sender?.role?.replace('_', ' ')}</p>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground shrink-0">{new Date(mail.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                           </div>
+                        ))}
+                     </div>
+                  )}
                </div>
             </div>
          </div>

@@ -10,19 +10,19 @@ import {
    X,
    Loader2,
    CheckCircle2,
-   VideoIcon,
    Users,
-   Filter
+   Filter,
+   VideoIcon
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
 import { MeetingCalendar } from "@/components/MeetingCalendar";
 
-export default function ManagerMeetingsPage() {
+export default function UnitHeadMeetingsPage() {
    const [meetings, setMeetings] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
    const [showCreateModal, setShowCreateModal] = useState(false);
-   const [projectLeads, setProjectLeads] = useState<any[]>([]);
+   const [managers, setManagers] = useState<any[]>([]);
    const [submitting, setSubmitting] = useState(false);
    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -44,9 +44,7 @@ export default function ManagerMeetingsPage() {
    }, []);
 
    const isJoinable = (scheduledAt: string) => {
-      const startTime = new Date(scheduledAt).getTime();
-      const now = currentTime.getTime();
-      return now >= startTime - 5 * 60 * 1000;
+      return new Date().getTime() >= new Date(scheduledAt).getTime() - 5 * 60 * 1000;
    };
 
    const fetchData = async () => {
@@ -61,16 +59,14 @@ export default function ManagerMeetingsPage() {
          .select(`meeting:meetings (*)`)
          .eq('user_id', user.id);
 
-      if (mData) {
-         setMeetings(mData.map((d: any) => d.meeting).filter(Boolean));
-      }
+      if (mData) setMeetings(mData.map((d: any) => d.meeting).filter(Boolean));
 
-      const { data: leadsData } = await supabase
+      const { data: managersData } = await supabase
          .from('users_metadata')
          .select('id, full_name, email')
-         .eq('role', 'project_lead');
+         .eq('role', 'manager');
 
-      if (leadsData) setProjectLeads(leadsData);
+      if (managersData) setManagers(managersData);
       setLoading(false);
    };
 
@@ -90,7 +86,6 @@ export default function ManagerMeetingsPage() {
                participants: formData.participants
             })
          });
-
          if (resp.ok) {
             setShowCreateModal(false);
             setFormData({ title: '', date: '', time: '', duration: '30', participants: [] });
@@ -116,22 +111,16 @@ export default function ManagerMeetingsPage() {
       .filter(m => new Date(m.scheduled_at).getTime() >= currentTime.getTime())
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0] ?? null;
 
-   // Filter by selected date, else show upcoming sorted
    const displayedMeetings = [...meetings]
       .filter(m => {
          if (!selectedDate) return true;
          const d = new Date(m.scheduled_at);
-         return (
-            d.getFullYear() === selectedDate.getFullYear() &&
-            d.getMonth() === selectedDate.getMonth() &&
-            d.getDate() === selectedDate.getDate()
-         );
+         return d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === selectedDate.getMonth() && d.getDate() === selectedDate.getDate();
       })
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
    return (
       <div className="space-y-6 pb-16">
-
          {/* Header */}
          <div className="flex items-center justify-between border-b border-secondary/50 pb-6">
             <div className="flex items-center gap-3">
@@ -140,7 +129,7 @@ export default function ManagerMeetingsPage() {
                </div>
                <div>
                   <h2 className="text-2xl font-bold tracking-tight">Meetings</h2>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Project Lead Sessions</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Manager Sessions</p>
                </div>
             </div>
             <button
@@ -164,12 +153,12 @@ export default function ManagerMeetingsPage() {
                   {nextMeeting ? nextMeeting.title : 'No upcoming meetings'}
                </h3>
                {nextMeeting && (
-                  <div className="flex flex-wrap items-center gap-3 mt-3 text-sm font-medium text-muted-foreground">
-                     <span className="flex items-center gap-1.5 bg-secondary/30 px-3 py-1 rounded-md text-xs">
+                  <div className="flex flex-wrap items-center gap-3 mt-3">
+                     <span className="flex items-center gap-1.5 text-xs font-bold bg-secondary/30 px-3 py-1 rounded-md text-muted-foreground">
                         <Clock className="h-3.5 w-3.5" />
                         {new Date(nextMeeting.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                      </span>
-                     <span className="flex items-center gap-1.5 bg-secondary/30 px-3 py-1 rounded-md text-xs">
+                     <span className="flex items-center gap-1.5 text-xs font-bold bg-secondary/30 px-3 py-1 rounded-md text-muted-foreground">
                         <Monitor className="h-3.5 w-3.5" /> Remote
                      </span>
                   </div>
@@ -178,29 +167,22 @@ export default function ManagerMeetingsPage() {
             <button
                disabled={!nextMeeting || !isJoinable(nextMeeting?.scheduled_at)}
                onClick={() => nextMeeting && window.open(nextMeeting.link, '_blank')}
-               className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 bg-foreground text-background rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:active:scale-100 relative z-10"
+               className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 bg-foreground text-background rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 relative z-10"
             >
                <Video className="h-4 w-4" />
                {nextMeeting && isJoinable(nextMeeting.scheduled_at) ? 'Join Meeting' : 'Standby'}
             </button>
          </div>
 
-         {/* Calendar + Meeting List */}
+         {/* Calendar + List */}
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-            {/* Functional Calendar */}
+            {/* Calendar */}
             <div className="space-y-3">
-               <MeetingCalendar
-                  meetings={meetings}
-                  selectedDate={selectedDate}
-                  onSelectDate={setSelectedDate}
-               />
+               <MeetingCalendar meetings={meetings} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
                {selectedDate && (
                   <div className="bg-accent/5 border border-accent/20 rounded-xl p-3 text-center">
                      <p className="text-[10px] font-black uppercase tracking-widest text-accent">Filtering by</p>
-                     <p className="text-sm font-bold mt-0.5">
-                        {selectedDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-                     </p>
+                     <p className="text-sm font-bold mt-0.5">{selectedDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</p>
                      <p className="text-[10px] font-bold text-muted-foreground mt-0.5">{displayedMeetings.length} meeting{displayedMeetings.length !== 1 ? 's' : ''}</p>
                   </div>
                )}
@@ -211,9 +193,7 @@ export default function ManagerMeetingsPage() {
                <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold flex items-center gap-2">
                      <Calendar className="h-4 w-4 text-accent" />
-                     {selectedDate
-                        ? `Meetings on ${selectedDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}`
-                        : 'All Upcoming Meetings'}
+                     {selectedDate ? `Meetings on ${selectedDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}` : 'All Upcoming Meetings'}
                   </h3>
                   {selectedDate && (
                      <button onClick={() => setSelectedDate(null)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
@@ -224,162 +204,100 @@ export default function ManagerMeetingsPage() {
 
                <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary overflow-hidden shadow-sm">
                   {loading ? (
-                     <div className="p-12 text-center flex flex-col items-center justify-center gap-3">
+                     <div className="p-12 text-center flex flex-col items-center gap-3">
                         <Loader2 className="h-6 w-6 animate-spin text-accent" />
                         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Scanning Schedule...</p>
                      </div>
                   ) : displayedMeetings.length === 0 ? (
                      <div className="p-12 text-center">
                         <Users className="h-8 w-8 text-muted-foreground/20 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                           {selectedDate ? 'No meetings on this date.' : 'No meetings scheduled.'}
-                        </p>
-                        {!selectedDate && (
-                           <button
-                              onClick={() => setShowCreateModal(true)}
-                              className="mt-4 text-xs font-bold uppercase tracking-wider text-accent hover:underline"
-                           >
-                              Schedule one now
-                           </button>
-                        )}
+                        <p className="text-sm font-medium text-muted-foreground">{selectedDate ? 'No meetings on this date.' : 'No meetings scheduled.'}</p>
+                        {!selectedDate && <button onClick={() => setShowCreateModal(true)} className="mt-4 text-xs font-bold uppercase tracking-wider text-accent hover:underline">Schedule one now</button>}
                      </div>
-                  ) : (
-                     displayedMeetings.map(mtg => {
-                        const joinable = isJoinable(mtg.scheduled_at);
-                        return (
-                           <div key={mtg.id} className="p-5 hover:bg-secondary/10 transition-colors group">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-2">
-                                       <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-secondary/50 text-foreground rounded-md border border-secondary">
-                                          {new Date(mtg.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-                                       </span>
-                                       <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                                          <Clock className="h-3.5 w-3.5" />
-                                          {new Date(mtg.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                       </span>
-                                       {joinable && (
-                                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded-md animate-pulse">
-                                             Live
-                                          </span>
-                                       )}
-                                    </div>
-                                    <h4 className="text-base font-bold group-hover:text-accent transition-colors tracking-tight">{mtg.title}</h4>
-                                    <div className="flex items-center gap-3 mt-2">
-                                       <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                                          <Video className="h-3.5 w-3.5" /> Remote · {mtg.duration_minutes ?? 30} min
-                                       </span>
-                                    </div>
+                  ) : displayedMeetings.map(mtg => {
+                     const joinable = isJoinable(mtg.scheduled_at);
+                     return (
+                        <div key={mtg.id} className="p-5 hover:bg-secondary/10 transition-colors group">
+                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                 <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-secondary/50 text-foreground rounded-md border border-secondary">
+                                       {new Date(mtg.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    </span>
+                                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                       <Clock className="h-3.5 w-3.5" />{new Date(mtg.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {joinable && <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded-md animate-pulse">Live</span>}
                                  </div>
-                                 {joinable ? (
-                                    <button
-                                       onClick={() => window.open(mtg.link, '_blank')}
-                                       className="px-5 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 bg-foreground text-background hover:bg-accent hover:text-white transition-all active:scale-95"
-                                    >
-                                       Join Meeting
-                                    </button>
-                                 ) : (
-                                    <div className="px-5 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 bg-secondary/30 text-muted-foreground/60 border border-secondary cursor-not-allowed">
-                                       <Clock className="h-3.5 w-3.5" /> Standby
-                                    </div>
-                                 )}
+                                 <h4 className="text-base font-bold group-hover:text-accent transition-colors">{mtg.title}</h4>
+                                 <div className="flex items-center gap-3 mt-2">
+                                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Video className="h-3.5 w-3.5" /> Remote · {mtg.duration_minutes ?? 30} min</span>
+                                 </div>
                               </div>
+                              {joinable ? (
+                                 <button onClick={() => window.open(mtg.link, '_blank')} className="px-5 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 bg-foreground text-background hover:bg-accent hover:text-white transition-all active:scale-95">
+                                    Join Meeting
+                                 </button>
+                              ) : (
+                                 <div className="px-5 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0 bg-secondary/30 text-muted-foreground/60 border border-secondary cursor-not-allowed">
+                                    <Clock className="h-3.5 w-3.5" /> Standby
+                                 </div>
+                              )}
                            </div>
-                        );
-                     })
-                  )}
+                        </div>
+                     );
+                  })}
                </div>
             </div>
          </div>
 
-         {/* Create Meeting Modal */}
+         {/* Create Modal */}
          {showCreateModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
                <div className="relative bg-background border border-secondary rounded-2xl p-8 w-full max-w-lg shadow-xl animate-in zoom-in-95 duration-200">
-                  <button
-                     onClick={() => setShowCreateModal(false)}
-                     className="absolute top-5 right-5 p-2 bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-lg transition-colors"
-                  >
+                  <button onClick={() => setShowCreateModal(false)} className="absolute top-5 right-5 p-2 bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-lg transition-colors">
                      <X className="h-5 w-5" />
                   </button>
-
                   <div className="mb-8">
                      <h3 className="text-xl font-bold tracking-tight">Schedule Meeting</h3>
-                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">With Project Leads</p>
+                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">With Managers</p>
                   </div>
-
                   <form onSubmit={handleCreateMeeting} className="space-y-6">
                      <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Meeting Title</label>
-                        <input
-                           required
-                           value={formData.title}
-                           onChange={e => setFormData({ ...formData, title: e.target.value })}
-                           className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none placeholder:text-muted-foreground/40 transition-all"
-                           placeholder="e.g., Q3 Planning Session"
-                        />
+                        <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none" placeholder="e.g., Quarterly Strategy Review" />
                      </div>
-
                      <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-2">
                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</label>
-                           <input
-                              required
-                              type="date"
-                              value={formData.date}
-                              onChange={e => setFormData({ ...formData, date: e.target.value })}
-                              className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
-                           />
+                           <input required type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent outline-none" />
                         </div>
                         <div className="space-y-2">
                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Time</label>
-                           <input
-                              required
-                              type="time"
-                              value={formData.time}
-                              onChange={e => setFormData({ ...formData, time: e.target.value })}
-                              className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
-                           />
+                           <input required type="time" value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent outline-none" />
                         </div>
                      </div>
-
                      <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                           <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Project Leads</span>
+                           <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Managers</span>
                            <span className="text-accent">{formData.participants.length} Selected</span>
                         </label>
                         <div className="max-h-44 overflow-y-auto border border-secondary rounded-lg bg-secondary/5 p-2 grid grid-cols-1 gap-1">
-                           {projectLeads.map(lead => (
-                              <button
-                                 type="button"
-                                 key={lead.id}
-                                 onClick={() => toggleParticipant(lead.id)}
-                                 className={cn(
-                                    "flex justify-between items-center px-3 py-2.5 text-xs font-bold rounded-md transition-all text-left",
-                                    formData.participants.includes(lead.id)
-                                       ? "bg-accent/10 text-accent border border-accent/20"
-                                       : "hover:bg-secondary text-foreground border border-transparent"
-                                 )}
-                              >
+                           {managers.map(m => (
+                              <button type="button" key={m.id} onClick={() => toggleParticipant(m.id)} className={cn("flex justify-between items-center px-3 py-2.5 text-xs font-bold rounded-md transition-all text-left", formData.participants.includes(m.id) ? "bg-accent/10 text-accent border border-accent/20" : "hover:bg-secondary text-foreground border border-transparent")}>
                                  <div>
-                                    <p className="font-bold">{lead.full_name}</p>
-                                    <p className="text-[10px] text-muted-foreground font-medium">{lead.email}</p>
+                                    <p className="font-bold">{m.full_name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{m.email}</p>
                                  </div>
-                                 {formData.participants.includes(lead.id) && <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />}
+                                 {formData.participants.includes(m.id) && <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />}
                               </button>
                            ))}
-                           {projectLeads.length === 0 && (
-                              <div className="p-4 text-center text-xs text-muted-foreground">No project leads found.</div>
-                           )}
+                           {managers.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">No managers found.</div>}
                         </div>
                      </div>
-
                      <div className="pt-2">
-                        <button
-                           disabled={submitting || formData.participants.length === 0}
-                           className="w-full py-3.5 bg-foreground text-background rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100"
-                        >
+                        <button disabled={submitting || formData.participants.length === 0} className="w-full py-3.5 bg-foreground text-background rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
                            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
                            {submitting ? 'Scheduling...' : 'Schedule Meeting'}
                         </button>
