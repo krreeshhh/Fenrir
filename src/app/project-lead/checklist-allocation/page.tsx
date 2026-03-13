@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from "react";
 import {
-   Plus, 
-   User, 
-   Calendar, 
-   Tag, 
-   Users, 
-   Zap, 
-   Target, 
-   FolderLock, 
-   ArrowUpRight, 
-   X, 
-   Briefcase, 
-   ShieldCheck, 
-   Search, 
+   Plus,
+   User,
+   Calendar,
+   Tag,
+   Users,
+   Zap,
+   Target,
+   FolderLock,
+   ArrowUpRight,
+   X,
+   Briefcase,
+   ShieldCheck,
+   Search,
    Loader2,
    ChevronDown,
    ChevronUp,
@@ -39,15 +39,15 @@ export default function ChecklistAllocationPage() {
    const [projects, setProjects] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
    const [expandedProject, setExpandedProject] = useState<string | null>(null);
-   
-   const [formData, setFormData] = useState({ 
-      projectId: '', 
+
+   const [formData, setFormData] = useState({
+      projectId: '',
       employeeId: '',
       items: [
          { title: '', description: '', deadline: '', role: 'Contributor', difficulty: 'Medium' }
       ]
    });
-   
+
    const { userId } = useUser();
    const supabase = createClient();
 
@@ -63,7 +63,7 @@ export default function ChecklistAllocationPage() {
          .from('projects')
          .select('*')
          .eq('project_lead_id', userId);
-      
+
       setProjects(myProjects || []);
       const projectIds = (myProjects || []).map((p: any) => p.id);
 
@@ -83,7 +83,7 @@ export default function ChecklistAllocationPage() {
          `)
          .in('checklists.project_id', projectIds)
          .order('created_at', { ascending: false });
-      
+
       const formattedAllocations = (currentAllocations || []).map((a: any) => ({
          ...a,
          users_metadata: Array.isArray(a.users_metadata) ? a.users_metadata[0] : a.users_metadata,
@@ -166,7 +166,7 @@ export default function ChecklistAllocationPage() {
    const handleUpdateSingle = async () => {
       if (!editingTask || !formData.items[0].title) return;
       setLoading(true);
-      
+
       const item = formData.items[0];
 
       await supabase
@@ -194,8 +194,8 @@ export default function ChecklistAllocationPage() {
    };
 
    const resetForm = () => {
-      setFormData({ 
-         projectId: '', 
+      setFormData({
+         projectId: '',
          employeeId: '',
          items: [{ title: '', description: '', deadline: '', role: 'Contributor', difficulty: 'Medium' }]
       });
@@ -245,17 +245,16 @@ export default function ChecklistAllocationPage() {
                      <Layers className="h-6 w-6 text-accent" />
                   </div>
                   <div>
-                     <h2 className="text-2xl font-bold tracking-tight">Task Allocation</h2>
-                     <p className="text-xs font-bold text-muted-foreground mt-1">Assign directives to personnel</p>
+                     <h2 className="text-2xl font-bold tracking-tight">Checklist Allocation</h2>
                   </div>
                </div>
             </div>
-            
-            <button 
-               onClick={() => { setEditingTask(null); resetForm(); setIsAllocating(true); }} 
+
+            <button
+               onClick={() => { setEditingTask(null); resetForm(); setIsAllocating(true); }}
                className="bg-foreground text-background px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
             >
-               <Plus className="h-4 w-4" /> Batch Initialize
+               <Plus className="h-4 w-4" /> Initialize
             </button>
          </div>
 
@@ -270,13 +269,13 @@ export default function ChecklistAllocationPage() {
                const groupedTasks = getProjectAllocations(project.id);
                const isExpanded = expandedProject === project.id;
                const tasksArray = Object.values(groupedTasks).flat();
-               const progress = tasksArray.length > 0 
-                  ? Math.round((tasksArray.filter(t => t.status === 'completed').length / tasksArray.length) * 100) 
+               const progress = tasksArray.length > 0
+                  ? Math.round((tasksArray.filter(t => t.status === 'completed').length / tasksArray.length) * 100)
                   : 0;
 
                return (
                   <div key={project.id} className="bg-background border border-secondary rounded-xl shadow-sm hover:border-accent/30 transition-all overflow-hidden">
-                     <button 
+                     <button
                         onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                         className={cn(
                            "w-full flex items-center justify-between p-6 text-left transition-all hover:bg-secondary/5",
@@ -331,16 +330,16 @@ export default function ChecklistAllocationPage() {
                                                 <Edit3 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                              </button>
                                           </div>
-                                          
+
                                           <h5 className="text-sm font-bold mb-3">{task.checklists.title}</h5>
-                                          
+
                                           <div className="space-y-3 pt-3 border-t border-secondary/50">
                                              {task.employee_note && (
                                                 <div className="bg-secondary/20 p-3 rounded-lg border border-secondary text-xs text-muted-foreground italic">
                                                    "{task.employee_note}"
                                                 </div>
                                              )}
-                                             
+
                                              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                                 <span className="flex items-center gap-1.5">
                                                    <BarChart3 className="h-3.5 w-3.5 text-accent" /> {task.difficulty_rating || 'Medium'}
@@ -354,7 +353,7 @@ export default function ChecklistAllocationPage() {
                                           </div>
                                        </div>
                                     ))}
-                                    <button 
+                                    <button
                                        onClick={() => {
                                           resetForm();
                                           setFormData(f => ({ ...f, projectId: project.id, employeeId: empId }));
@@ -394,10 +393,10 @@ export default function ChecklistAllocationPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                      <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Cluster</label>
-                        <select 
+                        <select
                            disabled={!!editingTask}
-                           value={formData.projectId} 
-                           onChange={e => setFormData({...formData, projectId: e.target.value})}
+                           value={formData.projectId}
+                           onChange={e => setFormData({ ...formData, projectId: e.target.value })}
                            className="w-full bg-background border border-secondary rounded-lg px-4 py-3 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm"
                         >
                            <option value="">Select Project...</option>
@@ -406,9 +405,9 @@ export default function ChecklistAllocationPage() {
                      </div>
                      <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Executing Node</label>
-                        <select 
-                           value={formData.employeeId} 
-                           onChange={e => setFormData({...formData, employeeId: e.target.value})}
+                        <select
+                           value={formData.employeeId}
+                           onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
                            className="w-full bg-background border border-secondary rounded-lg px-4 py-3 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm"
                         >
                            <option value="">Select Personnel...</option>
@@ -421,11 +420,11 @@ export default function ChecklistAllocationPage() {
                      <h4 className="text-sm font-bold flex items-center gap-2 border-b border-secondary/50 pb-2">
                         <Layers className="h-4 w-4 text-accent" /> Task Specifications
                      </h4>
-                     
+
                      {formData.items.map((item, idx) => (
                         <div key={idx} className="p-6 border border-secondary rounded-xl bg-secondary/5 relative group animate-in slide-in-from-right-4 duration-200">
                            {!editingTask && formData.items.length > 1 && (
-                              <button 
+                              <button
                                  onClick={() => removeItem(idx)}
                                  className="absolute -top-3 -right-3 h-8 w-8 bg-red-100 text-red-600 border-none rounded-full flex items-center justify-center hover:scale-110 hover:bg-red-500 hover:text-white transition-all shadow-sm"
                               >
@@ -437,21 +436,21 @@ export default function ChecklistAllocationPage() {
                               <div className="space-y-4">
                                  <div className="space-y-1.5">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Task Title</label>
-                                    <input 
-                                       value={item.title} 
+                                    <input
+                                       value={item.title}
                                        onChange={e => updateItem(idx, 'title', e.target.value)}
-                                       placeholder="e.g. Implement Navigation API..." 
-                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm" 
+                                       placeholder="e.g. Implement Navigation API..."
+                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm"
                                     />
                                  </div>
                                  <div className="space-y-1.5">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</label>
-                                    <textarea 
-                                       value={item.description} 
+                                    <textarea
+                                       value={item.description}
                                        onChange={e => updateItem(idx, 'description', e.target.value)}
-                                       placeholder="Detailed requirements..." 
+                                       placeholder="Detailed requirements..."
                                        rows={3}
-                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm resize-none" 
+                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm resize-none"
                                     />
                                  </div>
                               </div>
@@ -459,8 +458,8 @@ export default function ChecklistAllocationPage() {
                                  <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Complexity</label>
-                                       <select 
-                                          value={item.difficulty} 
+                                       <select
+                                          value={item.difficulty}
                                           onChange={e => updateItem(idx, 'difficulty', e.target.value)}
                                           className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm"
                                        >
@@ -471,21 +470,21 @@ export default function ChecklistAllocationPage() {
                                     </div>
                                     <div className="space-y-1.5">
                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Deadline</label>
-                                       <input 
-                                          value={item.deadline} 
+                                       <input
+                                          value={item.deadline}
                                           onChange={e => updateItem(idx, 'deadline', e.target.value)}
-                                          type="date" 
-                                          className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm cursor-pointer" 
+                                          type="date"
+                                          className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm cursor-pointer"
                                        />
                                     </div>
                                  </div>
                                  <div className="space-y-1.5">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Role/Focus</label>
-                                    <input 
-                                       value={item.role} 
+                                    <input
+                                       value={item.role}
                                        onChange={e => updateItem(idx, 'role', e.target.value)}
-                                       placeholder="e.g. Frontend Developer" 
-                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm" 
+                                       placeholder="e.g. Frontend Developer"
+                                       className="w-full bg-background border border-secondary rounded-lg px-4 py-2.5 text-sm font-medium focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-sm"
                                     />
                                  </div>
                               </div>
@@ -494,7 +493,7 @@ export default function ChecklistAllocationPage() {
                      ))}
 
                      {!editingTask && (
-                        <button 
+                        <button
                            onClick={addItem}
                            className="w-full py-3.5 border border-dashed border-secondary rounded-xl text-muted-foreground hover:border-accent hover:text-accent transition-all flex items-center justify-center gap-2 hover:bg-accent/5 font-bold text-xs uppercase tracking-wider"
                         >
@@ -503,7 +502,7 @@ export default function ChecklistAllocationPage() {
                      )}
 
                      <div className="pt-6">
-                        <button 
+                        <button
                            onClick={editingTask ? handleUpdateSingle : handleAllocateAll}
                            disabled={loading || !formData.projectId || !formData.employeeId || formData.items.some(i => !i.title)}
                            className="w-full py-3.5 bg-foreground text-background rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-accent hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 border-none"

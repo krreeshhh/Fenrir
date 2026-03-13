@@ -1,17 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { 
-   FolderLock, 
-   Clock, 
-   Zap, 
-   ArrowUpRight, 
-   Loader2, 
-   Database, 
-   ShieldCheck, 
-   Activity, 
-   BarChart3, 
-   AlertCircle, 
+import {
+   FolderLock,
+   Clock,
+   Zap,
+   ArrowUpRight,
+   Loader2,
+   Database,
+   ShieldCheck,
+   Activity,
+   BarChart3,
+   AlertCircle,
    Globe,
    Layers
 } from "lucide-react";
@@ -73,30 +73,15 @@ export default function ProjectsAllocatedPage() {
                </div>
                <div>
                   <h2 className="text-2xl font-bold tracking-tight">Active Projects</h2>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Strategic Directives Allocated to You</p>
                </div>
             </div>
-            <div className="flex items-center gap-4">
-               <div className="px-4 py-2 bg-secondary/20 border border-secondary rounded-lg flex items-center gap-2 shadow-sm">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-bold text-muted-foreground">Systems Online</span>
-               </div>
-            </div>
-         </div>
-
-         {/* Strategic Metrics Overlay */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard label="Active Clusters" value={projects.length} icon={Layers} color="text-accent" />
-            <MetricCard label="Operational" value={activeCount} icon={Activity} color="text-green-500" />
-            <MetricCard label="Critical Depth" value={criticalCount} icon={AlertCircle} color="text-red-500" />
-            <MetricCard label="Priority Status" value="Gold" icon={ShieldCheck} color="text-amber-500" />
          </div>
 
          {/* Project Grid */}
          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {projects.map(project => (
-               <div 
-                  key={project.id} 
+               <div
+                  key={project.id}
                   className="bg-background border border-secondary rounded-2xl p-6 shadow-sm hover:border-accent/40 transition-all group relative flex flex-col h-full overflow-hidden"
                >
                   <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -123,9 +108,9 @@ export default function ProjectsAllocatedPage() {
                            <span className="text-sm font-bold text-foreground">{project.completion_percentage}%</span>
                         </div>
                         <div className="h-2 w-full bg-secondary/50 rounded-full overflow-hidden">
-                           <div 
-                              className="h-full bg-accent transition-all duration-1000" 
-                              style={{ width: `${project.completion_percentage}%` }} 
+                           <div
+                              className="h-full bg-accent transition-all duration-1000"
+                              style={{ width: `${project.completion_percentage}%` }}
                            />
                         </div>
                      </div>

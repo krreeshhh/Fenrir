@@ -73,7 +73,7 @@ function ShellInner({ children, role }: DashboardShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { fullName, loading, userId } = useUser();
+  const { fullName, loading, userId, avatarUrl } = useUser();
   const supabase = createClient();
 
   useEffect(() => {
@@ -162,6 +162,7 @@ function ShellInner({ children, role }: DashboardShellProps) {
       <Sidebar
         role={role}
         userName={displayName}
+        avatarUrl={avatarUrl}
         isCompact={isSidebarCompact}
         onToggleCompact={() => setIsSidebarCompact(!isSidebarCompact)}
         isOpen={isMobileMenuOpen}
@@ -288,8 +289,8 @@ function ShellInner({ children, role }: DashboardShellProps) {
                 <p className="text-xs font-bold leading-none mb-1">{displayName}</p>
                 <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider leading-none">Status: Active</p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-foreground text-background flex items-center justify-center font-bold text-lg shadow-lg border border-accent/10">
-                {initials}
+              <div className="h-10 w-10 rounded-xl bg-foreground text-background flex items-center justify-center font-bold text-lg shadow-lg border border-accent/10 overflow-hidden bg-cover bg-center" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : {}}>
+                {!avatarUrl && initials}
               </div>
             </div>
           </div>

@@ -8,7 +8,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 });
 
 const emailToUpdate = 'summaadhaa@gmail.com';
-const newRole = 'unit_head';
+const newRole = 'manager';
 
 async function main() {
   console.log(`Looking for user with email: ${emailToUpdate}`);
@@ -51,7 +51,10 @@ async function main() {
     console.log(`Updating users_metadata table...`);
     const { error: tableUpdateError } = await supabase
       .from('users_metadata')
-      .update({ role: newRole })
+      .update({
+        role: newRole,
+        email: user.email // Ensure email is present
+      })
       .eq('id', user.id);
 
     if (tableUpdateError) console.error('Table update error:', tableUpdateError);
@@ -62,6 +65,7 @@ async function main() {
       .from('users_metadata')
       .insert({
         id: user.id,
+        email: user.email,
         role: newRole,
         full_name: user.user_metadata?.full_name || 'Summaa Dhaa'
       });

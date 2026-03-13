@@ -13,7 +13,9 @@ import {
    Plus,
    ArrowUpRight,
    FolderLock,
-   Activity
+   Activity,
+   Mail,
+   Video
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
@@ -31,6 +33,8 @@ export default function ProjectLeadDashboard() {
    });
    const [userData, setUserData] = useState<any>(null);
    const [loading, setLoading] = useState(true);
+   const [recentMails, setRecentMails] = useState<any[]>([]);
+   const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
    const supabase = createClient();
 
    useEffect(() => {
@@ -49,20 +53,19 @@ export default function ProjectLeadDashboard() {
          .single();
       setUserData(me);
 
-      const { data: allocations } = await supabase
-         .from('project_allocations')
+      const { data: allocations, error: allocError } = await supabase
+         .from('projects')
          .select(`
-          project_id,
-          projects (
             id,
             name,
             completion_percentage,
             status
-          )
-        `)
+         `)
          .eq('project_lead_id', user.id);
 
-      const overseeingProjects = allocations?.map((a: any) => Array.isArray(a.projects) ? a.projects[0] : a.projects).filter(Boolean) || [];
+      if (allocError) console.error("Projects Fetch Error:", allocError);
+
+      const overseeingProjects = allocations || [];
       const projectIds = overseeingProjects.map((p: any) => p.id);
 
       const { data: teamData } = await supabase
@@ -72,7 +75,7 @@ export default function ProjectLeadDashboard() {
 
       const uniqueEmployees = new Set(teamData?.map((t: any) => t.employee_id));
 
-      const { data: pending } = await supabase
+      const { data: pending, error: pendError } = await supabase
          .from('checklist_allocations')
          .select(`
           id, created_at,
@@ -83,7 +86,7 @@ export default function ProjectLeadDashboard() {
          .eq('verified', false)
          .limit(5);
 
-      const { data: ranks } = await supabase
+      const { data: ranks, error: leadRanksError } = await supabase
          .from('users_metadata')
          .select('*')
          .eq('role', 'project_lead')
@@ -94,7 +97,7 @@ export default function ProjectLeadDashboard() {
          ? Math.round(overseeingProjects.reduce((sum, p) => sum + Number(p.completion_percentage), 0) / overseeingProjects.length)
          : 0;
 
-      setStats({
+      const newStats = {
          activeProjects: overseeingProjects,
          pendingValidations: pending || [],
          teamCount: uniqueEmployees.size,
@@ -102,7 +105,37 @@ export default function ProjectLeadDashboard() {
          velocity: "+14%",
          avgCompletion: avgComp,
          leadRankings: ranks || []
-      });
+      };
+
+      if (allocError || pendError || leadRanksError) {
+         console.error("Errors:", { allocError, pendError, leadRanksError });
+      }
+
+      setStats(newStats);
+
+      // Fetch Recent Mails (Inbox)
+      const { data: mails } = await supabase
+         .from('messages')
+         .select('id, subject, sent_at, sender:sender_id(full_name)')
+         .eq('receiver_id', user.id)
+         .order('sent_at', { ascending: false })
+         .limit(3);
+      setRecentMails(mails || []);
+
+      // Fetch Upcoming Meetings
+      const { data: meetings } = await supabase
+         .from('meetings')
+         .select(`
+            id,
+            title,
+            scheduled_at,
+            meeting_participants!inner(user_id)
+         `)
+         .eq('meeting_participants.user_id', user.id)
+         .gte('scheduled_at', new Date().toISOString())
+         .order('scheduled_at', { ascending: true })
+         .limit(2);
+      setUpcomingMeetings(meetings || []);
 
       setLoading(false);
    };
@@ -110,152 +143,122 @@ export default function ProjectLeadDashboard() {
    if (loading) return <DashboardSkeleton />;
 
    return (
-
       <div className="space-y-6 pb-16">
 
-         {/* Welcome Banner */}
-         <div className="bg-background border border-secondary rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
-            <div className="text-center sm:text-left">
-               <p className="text-xs font-bold text-accent uppercase tracking-wider mb-1">Project Lead</p>
-               <h2 className="text-xl font-bold">{userData?.full_name}</h2>
-               <p className="text-sm text-muted-foreground mt-1 text-center sm:text-left">
-                  Managing <span className="font-bold text-foreground">{stats.activeProjects.length} active projects</span> · {stats.teamCount} team members
-               </p>
-            </div>
-            <div className="flex items-center gap-8 sm:gap-12 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-secondary pt-6 sm:pt-0 sm:pl-12">
-               <div className="text-left sm:text-right">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Score</p>
-                  <p className="text-2xl font-bold text-accent">{stats.unitScore.toLocaleString()}</p>
-               </div>
-               <div className="text-right">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Avg. Progress</p>
-                  <p className="text-2xl font-bold">{stats.avgCompletion}%</p>
-               </div>
-            </div>
-         </div>
-
-         {/* Stats Row */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <QuickStat title="Team Members" value={stats.teamCount} icon={Users} />
-            <QuickStat title="Avg Completion" value={`${stats.avgCompletion}%`} icon={CheckCircle2} />
-            <QuickStat title="Score" value={stats.unitScore.toLocaleString()} icon={Zap} highlight />
-            <QuickStat title="Velocity" value={stats.velocity} icon={TrendingUp} />
-         </div>
-
-         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Active Projects */}
-            <div className="lg:col-span-3 space-y-4">
-               <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                     <div className="h-10 w-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
-                        <FolderLock className="h-5 w-5 text-accent" />
-                     </div>
-                     <div>
-                        <h3 className="text-xl font-bold tracking-tight">Active Projects</h3>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">Assigned Clusters</p>
-                     </div>
-                  </div>
-                  <button onClick={() => window.location.href = '/project-lead/projects-allocated'} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
-                     View All <ChevronRight className="h-3 w-3" />
-                  </button>
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Active Projects Minimal List */}
+            <div className="lg:col-span-2 space-y-4">
+               <div className="flex items-center justify-between mb-2 px-1">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Project Status</h3>
                </div>
 
-               <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary shadow-sm">
-                  {stats.activeProjects.map((p, i) => (
-                     <div key={p.id} className="flex items-center justify-between p-5 hover:bg-secondary/10 transition-colors group">
+               <div className="bg-background border border-secondary rounded-2xl divide-y divide-secondary shadow-sm overflow-hidden">
+                  {stats.activeProjects.length > 0 ? stats.activeProjects.map((p, i) => (
+                     <div key={p.id} className="p-5 flex items-center justify-between hover:bg-secondary/10 transition-colors group">
                         <div className="flex-1">
-                           <p className="text-sm font-bold">{p.name}</p>
-                           <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{p.status}</p>
+                           <p className="text-sm font-bold tracking-tight group-hover:text-accent transition-colors">{p.name}</p>
+                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60">{p.status}</p>
                         </div>
-                        <div className="flex items-center gap-4">
-                           <div className="w-24 text-right">
-                              <p className="text-xs font-bold mb-1">{Math.round(p.completion_percentage || 0)}%</p>
-                              <div className="h-1.5 w-24 bg-secondary rounded-full overflow-hidden">
+                        <div className="flex items-center gap-6">
+                           <div className="text-right">
+                              <p className="text-[11px] font-bold mb-1">{Math.round(p.completion_percentage || 0)}% SYNCED</p>
+                              <div className="h-1 w-24 bg-secondary rounded-full overflow-hidden">
                                  <div
-                                    className={cn("h-full rounded-full transition-all duration-1000", i % 2 === 0 ? "bg-accent" : "bg-foreground")}
+                                    className="h-full bg-accent rounded-full transition-all duration-1000"
                                     style={{ width: `${Math.round(p.completion_percentage || 0)}%` }}
                                  />
                               </div>
                            </div>
-                           <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all">
-                              <ArrowUpRight className="h-4 w-4" />
-                           </div>
+                           <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                      </div>
-                  ))}
-                  {stats.activeProjects.length === 0 && (
-                     <div className="p-8 text-center text-sm text-muted-foreground">
-                        No active projects assigned.
+                  )) : (
+                     <div className="p-12 text-center text-xs font-bold text-muted-foreground/40 uppercase tracking-widest">
+                        No active assignments detected
                      </div>
                   )}
                </div>
 
-               {/* Lead Rankings */}
-               <div className="flex items-center justify-between pt-6 mb-4">
-                  <div className="flex items-center gap-3">
-                     <Zap className="h-5 w-5 text-accent" />
-                     <h3 className="text-lg font-bold">Lead Rankings</h3>
+               {/* Pending Validations - Moved to Left Side */}
+               <div className="mt-8 space-y-4">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                     <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Validations</h3>
                   </div>
-                  <button onClick={() => window.location.href = '/project-lead/leads-leaderboard'} className="text-xs font-bold text-accent hover:underline">Full Leaderboard</button>
-               </div>
-               <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary shadow-sm overflow-hidden">
-                  {stats.leadRankings.map((r, i) => (
-                     <div key={r.id} className={cn(
-                        "flex items-center justify-between p-4 transition-colors",
-                        r.id === userData?.id ? "bg-accent/5" : "hover:bg-secondary/10"
-                     )}>
-                        <div className="flex items-center gap-4">
-                           <span className="text-xs font-bold text-muted-foreground/30 w-6 text-center">{i + 1}</span>
-                           <div className="h-10 w-10 rounded-lg bg-secondary border border-secondary flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-foreground group-hover:text-background transition-all">
-                              {r.full_name[0]}
+                  <div className="bg-background border border-secondary rounded-2xl p-6 shadow-sm">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {stats.pendingValidations.length > 0 ? stats.pendingValidations.map((v) => (
+                           <div key={v.id} className="group p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl transition-all border border-secondary/30 hover:border-accent/40 cursor-pointer flex flex-col justify-between">
+                              <div>
+                                 <p className="text-sm font-bold truncate">{v.users_metadata?.full_name}</p>
+                                 <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1 truncate">{v.checklists?.title}</p>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between">
+                                 <span className="text-[9px] font-black text-accent uppercase tracking-tighter">Awaiting Signal</span>
+                                 <ChevronRight className="h-3 w-3 text-accent/40 group-hover:text-accent transition-colors" />
+                              </div>
                            </div>
-                           <div>
-                              <p className="text-sm font-bold">{r.full_name}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{r.id === userData?.id ? "You" : "Lead"}</p>
+                        )) : (
+                           <div className="col-span-full text-center py-12 border border-dashed border-secondary/50 rounded-xl bg-secondary/5">
+                              <ShieldCheck className="h-8 w-8 text-accent/20 mx-auto mb-2" />
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase opacity-60">All Systems Validated</p>
                            </div>
-                        </div>
-                        <span className="text-lg font-bold text-accent pr-2">{r.score.toLocaleString()}</span>
+                        )}
                      </div>
-                  ))}
+                     {stats.pendingValidations.length > 0 && (
+                        <button onClick={() => window.location.href = '/project-lead/checklist-completion'} className="w-full mt-6 py-3 bg-foreground text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-accent transition-all shadow-lg shadow-black/20">
+                           Initiate Personnel Review
+                        </button>
+                     )}
+                  </div>
                </div>
             </div>
 
-            {/* Pending Validations */}
-            <div className="space-y-6 lg:pt-0 pt-6">
-               <h3 className="text-lg font-bold flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-accent" /> Pending Validations</h3>
-               <div className="bg-background border border-secondary rounded-xl divide-y divide-secondary shadow-sm">
-                  {stats.pendingValidations.map((v) => (
-                     <div key={v.id} className="p-5 hover:bg-secondary/10 transition-colors">
-                        <p className="text-sm font-bold truncate">{v.users_metadata?.full_name || "Unknown"}</p>
-                        <p className="text-xs text-muted-foreground mt-1 truncate">{v.checklists?.title || "Manual Task"}</p>
-                        <span className="inline-block mt-3 text-[11px] font-bold text-accent uppercase tracking-wider px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20">Awaiting review</span>
-                     </div>
-                  ))}
-                  {stats.pendingValidations.length === 0 && (
-                     <div className="p-8 text-center text-sm font-bold text-muted-foreground opacity-50">
-                        All tasks validated.
-                     </div>
-                  )}
-               </div>
-               <button onClick={() => window.location.href = '/project-lead/checklist-completion'} className="w-full py-3 bg-secondary/30 border border-secondary hover:border-accent rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
-                  Review Completions
-               </button>
-
-               <div className="bg-accent/10 border border-accent/20 text-foreground rounded-xl p-6 text-center relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-150 transition-all duration-700">
-                     <ShieldCheck className="h-32 w-32" />
+            {/* Critical Validations Sidebar */}
+            <div className="space-y-6">
+               {/* Communication Overview */}
+               <div className="bg-background border border-secondary rounded-2xl p-6 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-5 flex items-center gap-2">
+                     <Mail className="h-3.5 w-3.5 text-accent" /> Intelligence
+                  </h4>
+                  <div className="space-y-4">
+                     {recentMails.length > 0 ? recentMails.map((mail: any) => (
+                        <div key={mail.id} className="group cursor-pointer">
+                           <p className="text-xs font-bold truncate group-hover:text-accent transition-colors">{mail.subject}</p>
+                           <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">From: {mail.sender?.full_name}</p>
+                        </div>
+                     )) : (
+                        <p className="text-[10px] text-muted-foreground/40 font-bold uppercase py-2">Inbox Clear</p>
+                     )}
                   </div>
-                  <ShieldCheck className="h-8 w-8 text-accent mx-auto mb-3 relative z-10" />
-                  <h5 className="font-bold text-sm">Unit Insights</h5>
-                  <p className="text-xs opacity-70 mt-2 font-medium">Unit efficiency is stable. Zero anomalies detected.</p>
-                  <button onClick={() => window.location.href = '/project-lead/projects-allocated'} className="mt-4 w-full py-2.5 bg-background border border-secondary text-foreground rounded-lg font-bold text-xs uppercase tracking-wider hover:border-accent transition-all">
-                     View Metrics
+                  <button onClick={() => window.location.href = '/project-lead/mail'} className="w-full mt-4 py-2 border border-secondary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-secondary/20 transition-all">
+                     Open Comm-Link
+                  </button>
+               </div>
+
+               {/* Briefing Overview */}
+               <div className="bg-background border border-secondary rounded-2xl p-6 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-5 flex items-center gap-2">
+                     <Video className="h-3.5 w-3.5 text-accent" /> Briefings
+                  </h4>
+                  <div className="space-y-3">
+                     {upcomingMeetings.length > 0 ? upcomingMeetings.map((mtg: any) => (
+                        <div key={mtg.id} className="p-3 bg-secondary/20 border border-secondary rounded-xl flex items-center justify-between">
+                           <p className="text-xs font-bold truncate pr-2">{mtg.title}</p>
+                           <p className="text-[9px] text-accent font-black uppercase whitespace-nowrap">
+                              {new Date(mtg.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           </p>
+                        </div>
+                     )) : (
+                        <p className="text-[10px] text-muted-foreground/40 font-bold uppercase py-2 text-center border border-dashed border-secondary/50 rounded-xl">No Meetings</p>
+                     )}
+                  </div>
+                  <button onClick={() => window.location.href = '/project-lead/meetings'} className="w-full mt-4 py-2 border border-secondary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-secondary/20 transition-all">
+                     Sync Schedule
                   </button>
                </div>
             </div>
          </div>
       </div>
-
    );
 }
 

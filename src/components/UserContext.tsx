@@ -11,10 +11,12 @@ interface UserContextValue {
   role: string;
   score: number;
   userId: string;
+  avatarUrl: string;
   joinedDate: string;
   loading: boolean;
   // Call this after a successful Save Changes to update the cached name
   refreshName: (newName: string) => void;
+  refreshAvatar: (newUrl: string) => void;
 }
 
 const UserContext = createContext<UserContextValue>({
@@ -25,14 +27,16 @@ const UserContext = createContext<UserContextValue>({
   role: "",
   score: 0,
   userId: "",
+  avatarUrl: "",
   joinedDate: "",
   loading: true,
   refreshName: () => {},
+  refreshAvatar: () => {},
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
-  const [data, setData] = useState<Omit<UserContextValue, "loading" | "refreshName">>({
+  const [data, setData] = useState<Omit<UserContextValue, "loading" | "refreshName" | "refreshAvatar">>({
     fullName: "",
     firstName: "",
     lastName: "",
@@ -40,6 +44,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     role: "",
     score: 0,
     userId: "",
+    avatarUrl: "",
     joinedDate: "",
   });
   const [loading, setLoading] = useState(true);
@@ -54,7 +59,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const { data: meta } = await supabase
       .from("users_metadata")
-      .select("full_name, role, score")
+      .select("full_name, role, score, avatar_url")
       .eq("id", user.id)
       .single();
 
@@ -71,6 +76,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       role: meta?.role || user.user_metadata?.role || "employee",
       score: meta?.score || 0,
       userId: user.id,
+      avatarUrl: meta?.avatar_url || "",
       joinedDate: joined,
     });
     setLoading(false);
@@ -85,8 +91,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const refreshAvatar = (newUrl: string) => {
+    setData(prev => ({
+      ...prev,
+      avatarUrl: newUrl,
+    }));
+  };
+
   return (
-    <UserContext.Provider value={{ ...data, loading, refreshName }}>
+    <UserContext.Provider value={{ ...data, loading, refreshName, refreshAvatar }}>
       {children}
     </UserContext.Provider>
   );

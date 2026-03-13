@@ -151,7 +151,6 @@ export default function ChecklistCompletionPage() {
                </div>
                <div>
                   <h2 className="text-2xl font-bold tracking-tight">Verification Queue</h2>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Authenticating submitted tasks</p>
                </div>
             </div>
             <div className="flex items-center gap-4">
@@ -279,7 +278,7 @@ export default function ChecklistCompletionPage() {
                      <div key={i} className="bg-secondary/10 border border-secondary rounded-lg p-4 flex items-center justify-between hover:bg-secondary/20 transition-colors">
                         <div className="flex items-center gap-4">
                            <div className="h-8 w-8 bg-green-500/20 text-green-500 rounded flex items-center justify-center">
-                               <CheckCircle2 className="h-4 w-4" />
+                              <CheckCircle2 className="h-4 w-4" />
                            </div>
                            <div>
                               <p className="text-sm font-bold tracking-tight">{h.task_meta?.title}</p>

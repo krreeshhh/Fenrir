@@ -9,11 +9,12 @@ import {
 } from "lucide-react";
 import { createClient } from "@/utils/supabase";
 import { cn } from "@/utils/cn";
+import { ProfileSkeleton } from "@/components/Skeleton";
 
 export default function ProfileView() {
    const router = useRouter();
    const supabase = createClient();
-   const { fullName, firstName, lastName, email, role, score, userId, joinedDate, loading, refreshName } = useUser();
+   const { fullName, firstName, lastName, email, role, score, userId, joinedDate, loading, refreshName, avatarUrl, refreshAvatar } = useUser();
 
    const [editFirst, setEditFirst] = useState("");
    const [editLast, setEditLast] = useState("");
@@ -21,6 +22,7 @@ export default function ProfileView() {
    const [saving, setSaving] = useState(false);
    const [saved, setSaved] = useState(false);
    const [saveError, setSaveError] = useState("");
+   const [uploading, setUploading] = useState(false);
 
    if (!loading && !initialized) {
       setEditFirst(firstName);
@@ -40,17 +42,41 @@ export default function ProfileView() {
       setSaving(false);
    };
 
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+       try {
+          setUploading(true);
+          const file = event.target.files?.[0];
+          if (!file) return;
+ 
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("userId", userId);
+ 
+          const response = await fetch("/api/profile/upload", {
+             method: "POST",
+             body: formData,
+          });
+ 
+          if (!response.ok) {
+             const errorData = await response.json();
+             throw new Error(errorData.error || "Upload failed");
+          }
+ 
+          const { publicUrl } = await response.json();
+          refreshAvatar(publicUrl);
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2500);
+       } catch (error: any) {
+          setSaveError("Upload failed: " + error.message);
+       } finally {
+          setUploading(false);
+       }
+    };
+
    const initials = editFirst.slice(0, 1).toUpperCase() || email.slice(0, 1).toUpperCase() || "?";
    const fullDisplayName = `${editFirst} ${editLast}`.trim() || fullName || "User";
 
-   if (loading) return (
-      <div className="flex h-[60vh] items-center justify-center">
-         <div className="text-center space-y-3">
-            <Loader2 className="h-8 w-8 animate-spin text-accent mx-auto" />
-            <p className="text-muted-foreground font-bold text-sm animate-pulse">Loading profile...</p>
-         </div>
-      </div>
-   );
+   if (loading) return <ProfileSkeleton />;
 
    return (
       <div className="space-y-6 pb-16 max-w-5xl mx-auto">
@@ -74,8 +100,28 @@ export default function ProfileView() {
             <div className="px-8 pb-8 -mt-12 relative flex flex-col md:flex-row md:items-end justify-between gap-6">
                <div className="flex items-end gap-5">
                   <div className="relative group">
-                     <div className="h-24 w-24 rounded-2xl bg-foreground text-background font-bold text-4xl flex items-center justify-center border-2 border-background shadow-md">{initials}</div>
-                     <button className="absolute -bottom-2 -right-2 h-8 w-8 rounded-xl bg-accent text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95"><Camera className="h-4 w-4" /></button>
+                     <div className="h-24 w-24 rounded-2xl bg-foreground text-background font-bold text-4xl flex items-center justify-center border-2 border-background shadow-md overflow-hidden bg-cover bg-center" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : {}}>
+                        {!avatarUrl && initials}
+                        {uploading && (
+                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 className="h-6 w-6 text-white animate-spin" />
+                           </div>
+                        )}
+                     </div>
+                     <label
+                        htmlFor="avatar-upload"
+                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-xl bg-accent text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                     >
+                        <Camera className="h-4 w-4" />
+                        <input
+                           type="file"
+                           id="avatar-upload"
+                           className="hidden"
+                           accept="image/*"
+                           onChange={handleFileUpload}
+                           disabled={uploading}
+                        />
+                     </label>
                   </div>
                   <div className="pb-1 space-y-1">
                      <h3 className="text-2xl font-bold tracking-tight">{fullDisplayName}</h3>
@@ -131,9 +177,6 @@ export default function ProfileView() {
                   <div className="w-full h-2.5 bg-secondary/50 rounded-full overflow-hidden border border-secondary">
                      <div className="h-full rounded-full bg-gradient-to-r from-accent to-amber-500 transition-all duration-1000 ease-out" style={{ width: `${Math.min((score / 5000) * 100, 100)}%` }} />
                   </div>
-                  <p className="text-xs font-bold text-muted-foreground bg-secondary/20 px-3 py-2 rounded-lg inline-block border border-secondary/50">
-                     {score >= 4000 ? "Top Performer 🏆" : score >= 2000 ? "Rising Star ⭐" : "Building Momentum 🚀"}
-                  </p>
                </div>
             </div>
          </div>

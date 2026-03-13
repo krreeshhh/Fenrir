@@ -79,11 +79,11 @@ export default function EmployeeDashboard() {
       if (!allocError && allocations) {
          const pMap: Record<string, any> = {};
          const completedIds: string[] = [];
-         
+
          allocations.forEach((alloc: any) => {
             const checklist = Array.isArray(alloc.checklists) ? alloc.checklists[0] : alloc.checklists;
             const project = Array.isArray(checklist?.projects) ? checklist.projects[0] : checklist?.projects;
-            
+
             if (!project?.id) return;
             if (!pMap[project.id]) {
                pMap[project.id] = { ...project, tasks: [] };
@@ -136,84 +136,62 @@ export default function EmployeeDashboard() {
    if (loading) return <DashboardSkeleton />;
 
    return (
-      
-         <div className="space-y-6 pb-16">
 
-            {/* Welcome Banner */}
-            <div className="bg-background border border-secondary rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
-                <div className="text-center sm:text-left">
-                   <p className="text-xs font-bold text-accent uppercase tracking-wider mb-1">Welcome back</p>
-                   <h2 className="text-xl font-bold">{userData?.full_name}</h2>
-                   <p className="text-sm text-muted-foreground mt-1 text-center sm:text-left">
-                      You are overseeing <span className="font-bold text-foreground">{stats.ongoingProjects} active mission clusters</span>.
-                   </p>
-                </div>
-               <div className="flex items-center gap-8 sm:gap-12 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-secondary pt-6 sm:pt-0 sm:pl-10">
-                  <div className="text-left sm:text-right">
-                     <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Impact Score</p>
-                     <p className="text-2xl font-bold text-accent">{stats.score.toLocaleString()}</p>
+      <div className="space-y-6 pb-16">
+
+         {/* Stats Row */}
+         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <StatCard title="Ongoing Projects" value={stats.ongoingProjects} icon={Activity} highlight={true} />
+            <StatCard title="Active Tasks" value={stats.tasksCount} icon={Layers} highlight={false} />
+            <StatCard title="Global Rank" value={`#${stats.rank}`} icon={Star} highlight={false} />
+         </div>
+
+         {/* Project Kanban Board */}
+         <div className="pt-4">
+            <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
+                     <Target className="h-5 w-5 text-accent" />
                   </div>
-                  <div className="text-right">
-                     <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Global Rank</p>
-                     <p className="text-2xl font-bold">#{stats.rank.toString().padStart(2, '0')}</p>
+                  <div>
+                     <h3 className="text-xl font-bold uppercase tracking-tight">Mission Control</h3>
+                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">Live Operational Status</p>
                   </div>
                </div>
+               <button
+                  onClick={() => router.push('/employee/checklist')}
+                  className="px-6 py-3 bg-secondary/30 hover:bg-secondary rounded-xl text-xs font-bold uppercase tracking-wider border border-secondary/50 transition-all flex items-center gap-2"
+               >
+                  View Detailed Checklist <ArrowRight className="h-3 w-3" />
+               </button>
             </div>
 
-             {/* Stats Row */}
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard title="Ongoing Projects" value={stats.ongoingProjects} icon={Activity} highlight={true} />
-                <StatCard title="Finished Projects" value={stats.finishedProjects} icon={CheckCircle2} highlight={false} />
-                <StatCard title="Active Directives" value={stats.tasksCount} icon={Layers} highlight={false} />
-                <StatCard title="Global Rank" value={`#${stats.rank}`} icon={Star} highlight={false} />
-             </div>
-
-             {/* Project Kanban Board */}
-             <div className="pt-4">
-                <div className="flex items-center justify-between mb-8">
-                   <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
-                         <Target className="h-5 w-5 text-accent" />
-                      </div>
-                      <div>
-                         <h3 className="text-xl font-bold uppercase tracking-tight">Mission Control</h3>
-                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">Live Operational Status</p>
-                      </div>
-                   </div>
-                   <button 
-                      onClick={() => router.push('/employee/checklist')}
-                      className="px-6 py-3 bg-secondary/30 hover:bg-secondary rounded-xl text-xs font-bold uppercase tracking-wider border border-secondary/50 transition-all flex items-center gap-2"
-                   >
-                      View Detailed Checklist <ArrowRight className="h-3 w-3" />
-                   </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                   <KanbanColumn 
-                      title="Newly Allocated" 
-                      icon={<Zap className="h-4 w-4 text-accent" />}
-                      projects={projects.filter(p => p.tasks.every((t: any) => t.status !== 'completed'))}
-                      completedIds={completedTasks}
-                   />
-                   <KanbanColumn 
-                      title="Ongoing Operations" 
-                      icon={<Activity className="h-4 w-4 text-amber-500" />}
-                      projects={projects.filter(p => {
-                         const done = p.tasks.filter((t: any) => t.status === 'completed').length;
-                         return done > 0 && done < p.tasks.length;
-                      })}
-                      completedIds={completedTasks}
-                   />
-                   <KanbanColumn 
-                      title="Successful Sync" 
-                      icon={<CheckCircle2 className="h-4 w-4 text-green-500" />}
-                      projects={projects.filter(p => p.tasks.every((t: any) => t.status === 'completed'))}
-                      completedIds={completedTasks}
-                   />
-                </div>
-             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               <KanbanColumn
+                  title="Newly Allocated"
+                  icon={<Zap className="h-4 w-4 text-accent" />}
+                  projects={projects.filter(p => p.tasks.every((t: any) => t.status !== 'completed'))}
+                  completedIds={completedTasks}
+               />
+               <KanbanColumn
+                  title="Ongoing Operations"
+                  icon={<Activity className="h-4 w-4 text-amber-500" />}
+                  projects={projects.filter(p => {
+                     const done = p.tasks.filter((t: any) => t.status === 'completed').length;
+                     return done > 0 && done < p.tasks.length;
+                  })}
+                  completedIds={completedTasks}
+               />
+               <KanbanColumn
+                  title="Successful Sync"
+                  icon={<CheckCircle2 className="h-4 w-4 text-green-500" />}
+                  projects={projects.filter(p => p.tasks.every((t: any) => t.status === 'completed'))}
+                  completedIds={completedTasks}
+               />
+            </div>
          </div>
-      
+      </div>
+
    );
 }
 
@@ -239,7 +217,7 @@ function KanbanColumn({ title, icon, projects, completedIds }: any) {
                const perc = Math.round((done / total) * 100);
 
                return (
-                  <div 
+                  <div
                      key={p.id}
                      onClick={() => router.push('/employee/checklist')}
                      className="bg-background border border-secondary/60 rounded-2xl p-5 hover:border-accent hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all cursor-pointer group active:scale-95"
@@ -248,8 +226,8 @@ function KanbanColumn({ title, icon, projects, completedIds }: any) {
                         <div className={cn(
                            "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border",
                            p.priority === 'High' ? "text-red-500 border-red-500/20 bg-red-500/5" :
-                           p.priority === 'Medium' ? "text-amber-500 border-amber-500/20 bg-amber-500/5" :
-                           "text-green-500 border-green-500/20 bg-green-500/5"
+                              p.priority === 'Medium' ? "text-amber-500 border-amber-500/20 bg-amber-500/5" :
+                                 "text-green-500 border-green-500/20 bg-green-500/5"
                         )}>
                            {p.priority}
                         </div>

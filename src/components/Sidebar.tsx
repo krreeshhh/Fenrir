@@ -36,6 +36,7 @@ import { UserRole, createClient } from "@/utils/supabase";
 interface SidebarProps {
   role: UserRole;
   userName?: string;
+  avatarUrl?: string;
   isCompact?: boolean;
   onToggleCompact?: () => void;
   isOpen?: boolean;
@@ -84,7 +85,7 @@ const navItemsByRole: Record<UserRole, { label: string, href: string, icon: any 
   ],
 };
 
-export default function Sidebar({ role, userName, isCompact = false, onToggleCompact, isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ role, userName, avatarUrl, isCompact = false, onToggleCompact, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -180,8 +181,8 @@ export default function Sidebar({ role, userName, isCompact = false, onToggleCom
         <div className={cn("p-4 border-t border-secondary space-y-6 bg-secondary/10", isCompact ? "flex flex-col items-center" : "")}>
           {userName && (
             <div className={cn("flex items-center gap-4 px-2", isCompact ? "justify-center" : "")}>
-              <div className="h-8 w-8 min-w-8 rounded-lg bg-accent text-white flex items-center justify-center font-bold shadow-lg border border-white/10">
-                {userName[0].toUpperCase()}
+              <div className="h-8 w-8 min-w-8 rounded-lg bg-accent text-white flex items-center justify-center font-bold shadow-lg border border-white/10 overflow-hidden bg-cover bg-center" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : {}}>
+                {!avatarUrl && userName && userName[0].toUpperCase()}
               </div>
               {!isCompact && (
                 <div className="overflow-hidden animate-in fade-in slide-in-from-left-2 duration-500">

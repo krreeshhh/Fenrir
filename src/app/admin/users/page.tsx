@@ -11,7 +11,9 @@ import {
    CheckCircle2,
    AlertCircle,
    X,
-   Filter
+   Filter,
+   Edit2,
+   Check
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { createClient } from "@/utils/supabase";
@@ -27,6 +29,8 @@ export default function UserGovernancePage() {
    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
    const [showAdmins, setShowAdmins] = useState(true);
    const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
+   const [editingNameId, setEditingNameId] = useState<string | null>(null);
+   const [tempName, setTempName] = useState("");
    const supabase = createClient();
 
    useEffect(() => {
@@ -50,10 +54,11 @@ export default function UserGovernancePage() {
    };
 
    const updateRole = async (userId: string, newRole: string) => {
-      if (userId === currentAdminId && newRole !== 'admin') {
-          if (!confirm("You are about to remove your own administrative authority. You will lose access to this dashboard immediately. Continue?")) {
-              return;
-          }
+      // Security Override: Admin cannot change another admin or themselves
+      const targetUser = users.find(u => u.id === userId);
+      if (targetUser?.role === 'admin') {
+         setMessage({ type: 'error', text: "Administrative Protocol Error: Authority recalibration of Admin nodes is restricted." });
+         return;
       }
 
       setUpdating(userId);
@@ -68,10 +73,26 @@ export default function UserGovernancePage() {
          setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
          setMessage({ type: 'success', text: "System node authority recalibrated successfully." });
          setTimeout(() => setMessage(null), 3000);
-         
-         if (userId === currentAdminId && newRole !== 'admin') {
-             window.location.href = '/'; // Kick out if self-demoted
-         }
+      }
+      setUpdating(null);
+   };
+
+   const updateName = async (userId: string) => {
+      if (!tempName.trim()) return;
+      
+      setUpdating(userId);
+      const { error } = await supabase
+         .from('users_metadata')
+         .update({ full_name: tempName.trim() })
+         .eq('id', userId);
+
+      if (error) {
+         setMessage({ type: 'error', text: "Failed to update node identity: " + error.message });
+      } else {
+         setUsers(prev => prev.map(u => u.id === userId ? { ...u, full_name: tempName.trim() } : u));
+         setEditingNameId(null);
+         setMessage({ type: 'success', text: "Node identity updated." });
+         setTimeout(() => setMessage(null), 3000);
       }
       setUpdating(null);
    };
@@ -145,20 +166,45 @@ export default function UserGovernancePage() {
                               <div className="h-10 w-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center font-bold text-xs group-hover:bg-foreground group-hover:text-background transition-all shadow-sm">
                                  {user.full_name[0]}
                               </div>
-                              <div>
-                                 <p className="text-sm font-bold uppercase tracking-tight">{user.full_name} {user.id === currentAdminId && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-accent text-white rounded">(YOU)</span>}</p>
-                                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 opacity-60">{user.email}</p>
-                              </div>
+                               <div>
+                                  {editingNameId === user.id ? (
+                                     <div className="flex items-center gap-2">
+                                        <input 
+                                           autoFocus
+                                           value={tempName}
+                                           onChange={e => setTempName(e.target.value)}
+                                           onKeyDown={e => e.key === 'Enter' && updateName(user.id)}
+                                           className="bg-secondary/30 border border-accent/40 rounded px-2 py-1 text-sm font-bold uppercase outline-none"
+                                        />
+                                        <button onClick={() => updateName(user.id)} className="text-green-500 hover:scale-110"><Check className="h-4 w-4" /></button>
+                                        <button onClick={() => setEditingNameId(null)} className="text-red-500 hover:scale-110"><X className="h-4 w-4" /></button>
+                                     </div>
+                                  ) : (
+                                     <div className="flex items-center gap-2 group/name">
+                                        <p className="text-sm font-bold uppercase tracking-tight">
+                                           {user.full_name} 
+                                           {user.id === currentAdminId && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-accent text-white rounded">(YOU)</span>}
+                                        </p>
+                                        <button 
+                                           onClick={() => { setEditingNameId(user.id); setTempName(user.full_name); }}
+                                           className="opacity-0 group-hover/name:opacity-100 transition-opacity text-accent hover:scale-110"
+                                        >
+                                           <Edit2 className="h-3 w-3" />
+                                        </button>
+                                     </div>
+                                  )}
+                                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 opacity-60">{user.email}</p>
+                               </div>
                            </div>
                         </td>
                         <td className="px-6 py-5">
                            <div className="flex items-center gap-3">
-                              <select 
-                                 value={user.role} 
-                                 onChange={e => updateRole(user.id, e.target.value)}
-                                 disabled={updating === user.id}
-                                 className="bg-secondary/30 border border-secondary rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider outline-none focus:border-accent/40 transition-all appearance-none pr-8 cursor-pointer disabled:opacity-50 shadow-inner"
-                              >
+                               <select 
+                                  value={user.role} 
+                                  onChange={e => updateRole(user.id, e.target.value)}
+                                  disabled={updating === user.id || user.role === 'admin'}
+                                  className="bg-secondary/30 border border-secondary rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider outline-none focus:border-accent/40 transition-all appearance-none pr-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-inner"
+                               >
                                  {ROLES.map(r => (
                                     <option key={r} value={r}>{r.replace('_', ' ')}</option>
                                  ))}

@@ -104,10 +104,7 @@ export default function ProjectsOverviewPage() {
             </div>
             <div className="text-center sm:text-left z-10">
                <p className="text-xs font-bold text-accent uppercase tracking-wider mb-2">Portfolio Registry</p>
-               <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Project Node Overview</h2>
-               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-4">
-                  Synchronizing <span className="text-foreground">{projects.length} strategic clusters</span> across the network.
-               </p>
+               <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Project Overview</h2>
             </div>
             <div className="flex items-center gap-8 sm:gap-12 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-secondary pt-6 sm:pt-0 sm:pl-12 z-10">
                <div className="text-left sm:text-right">
@@ -138,8 +135,8 @@ export default function ProjectsOverviewPage() {
                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 py-0.5 bg-secondary/30 rounded border border-secondary">Cluster Node</span>
                            <span className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border",
                               project.priority === 'High' ? "text-red-500 border-red-500/20 bg-red-500/10" :
-                              project.priority === 'Medium' ? "text-amber-500 border-amber-500/20 bg-amber-500/10" :
-                              "text-green-500 border-green-500/20 bg-green-500/10"
+                                 project.priority === 'Medium' ? "text-amber-500 border-amber-500/20 bg-amber-500/10" :
+                                    "text-green-500 border-green-500/20 bg-green-500/10"
                            )}>
                               {project.priority || 'Low'} Priority
                            </span>

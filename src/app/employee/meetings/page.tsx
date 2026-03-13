@@ -111,7 +111,7 @@ export default function MeetingsPage() {
          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                <Calendar className="h-5 w-5 text-accent" />
-               <h2 className="text-xl font-bold uppercase tracking-tighter">Assigned Operations</h2>
+               <h2 className="text-xl font-bold uppercase tracking-tighter">Meetings Assigned</h2>
             </div>
          </div>
 
@@ -155,23 +155,9 @@ export default function MeetingsPage() {
          )}
 
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Calendar Info Pane */}
-            <div className="space-y-6">
-               <div className="bg-background border border-secondary rounded-xl p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                     <h3 className="text-sm font-bold">Matrix Calendar</h3>
-                  </div>
-                  <div className="space-y-4">
-                     <p className="text-xs font-bold text-muted-foreground leading-relaxed uppercase tracking-wider">
-                        Operational meetings are allocated by Project Leads. Contact your cluster lead for scheduling adjustments.
-                     </p>
-                  </div>
-               </div>
-            </div>
-
             {/* Meeting List */}
-            <div className="lg:col-span-3 space-y-4">
-               <h3 className="text-sm font-bold flex items-center gap-2 px-2"><Calendar className="h-4 w-4 text-accent" /> Upcoming Communication Nodes</h3>
+            <div className="lg:col-span-4 space-y-4">
+               <h3 className="text-sm font-bold flex items-center gap-2 px-2"><Calendar className="h-4 w-4 text-accent" /> Upcoming Meetings</h3>
                <div className="space-y-4">
                   {loading ? (
                      <div className="p-12 text-center border-2 border-secondary border-dashed rounded-xl opacity-50">

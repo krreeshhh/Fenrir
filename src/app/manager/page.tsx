@@ -59,12 +59,13 @@ export default function ManagerDashboard() {
 
       // Leads overseeing these projects
       const { data: leadsData } = await supabase
-         .from('project_allocations')
+         .from('projects')
          .select(`
             project_lead_id,
-            users_metadata!inner (full_name, score, role)
+            users_metadata!projects_project_lead_id_fkey(full_name, score, role)
          `)
-         .in('project_id', projectIds);
+         .in('id', projectIds)
+         .not('project_lead_id', 'is', null);
 
       const uniqueLeads = Array.from(new Map(leadsData?.map((l: any) => [l.project_lead_id, l.users_metadata])).values());
 
@@ -131,106 +132,95 @@ export default function ManagerDashboard() {
 
    return (
       <div className="space-y-6 pb-16">
-         {/* Stats Row */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <QuickStat title="Human Capital Index" value={stats.personnelCount} icon={Users} highlight={true} />
-            <QuickStat title="Active Operations" value={stats.projectCount} icon={Target} />
+         {/* Minimal Manager Header */}
+         <div className="bg-background border border-secondary rounded-2xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-sm relative overflow-hidden">
+            <div className="space-y-2 relative z-10">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Operations Manager</p>
+               <h2 className="text-2xl font-bold tracking-tight">{userData?.full_name}</h2>
+               <p className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                  Overseeing <span className="text-foreground font-bold">{stats.projectCount} Strategic Projects</span> 
+                  <span className="w-1 h-1 rounded-full bg-secondary" />
+                  Directing <span className="text-foreground font-bold">{stats.personnelCount} Operators</span>
+               </p>
+            </div>
+            <div className="flex items-center gap-10 border-t md:border-t-0 md:border-l border-secondary pt-8 md:pt-0 md:pl-10 relative z-10">
+               <div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Portfolio Value</p>
+                  <p className="text-2xl font-bold tracking-tighter text-white">${(stats.assetValue / 1000).toFixed(1)}K</p>
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Lead Count</p>
+                  <p className="text-2xl font-bold tracking-tighter text-accent">{stats.leadCount}</p>
+               </div>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-3 space-y-6">
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="h-10 w-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
-                        <Zap className="h-5 w-5 text-accent" />
-                     </div>
-                     <div>
-                        <h3 className="text-xl font-bold tracking-tight">Cluster Project Monitor</h3>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">Real-time operational status</p>
-                     </div>
-                  </div>
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Active Operations List */}
+            <div className="lg:col-span-2 space-y-4">
+               <div className="flex items-center justify-between mb-2 px-1">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Active Operations</h3>
                </div>
 
-               <div className="bg-background border border-secondary rounded-[24px] shadow-sm overflow-hidden">
-                  <table className="w-full text-left">
-                     <thead>
-                        <tr className="bg-secondary/20 border-b border-secondary">
-                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operation Name</th>
-                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Initialized</th>
-                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Integrity</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-secondary">
-                        {stats.managedProjects.map((proj: any, i: number) => (
-                           <tr key={i} className="hover:bg-secondary/10 transition-colors group">
-                              <td className="px-6 py-4">
-                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-accent shadow-blue-glow" />
-                                    <span className="text-sm font-bold">{proj.name}</span>
-                                 </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                 <span className="text-xs font-bold text-muted-foreground uppercase">{new Date(proj.created_at).toLocaleDateString()}</span>
-                              </td>
-                               <td className="px-6 py-4 text-right">
-                                 <span className={cn(
-                                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-tighter",
-                                    proj.status === 'active' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                                 )}>
-                                    Status: {proj.status || 'Active'}
-                                 </span>
-                              </td>
-                           </tr>
-                        ))}
-                        {stats.managedProjects.length === 0 && (
-                           <tr>
-                              <td colSpan={3} className="px-10 py-20 text-center text-sm font-bold text-muted-foreground opacity-50 uppercase tracking-widest">
-                                 No active project nodes detected
-                              </td>
-                           </tr>
-                        )}
-                     </tbody>
-                  </table>
+               <div className="bg-background border border-secondary rounded-2xl divide-y divide-secondary shadow-sm overflow-hidden">
+                  {stats.managedProjects.length > 0 ? stats.managedProjects.map((proj: any) => (
+                     <div key={proj.id} className="p-5 flex items-center justify-between hover:bg-secondary/10 transition-colors group">
+                        <div className="flex items-center gap-4">
+                           <div className="h-2 w-2 rounded-full bg-accent shadow-blue-glow animate-pulse" />
+                           <p className="font-bold text-sm tracking-tight">{proj.name}</p>
+                        </div>
+                        <div className="flex items-center gap-6">
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(proj.created_at).toLocaleDateString()}</p>
+                           <span className={cn(
+                              "px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-tighter border",
+                              proj.status === 'active' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                           )}>
+                              {proj.status || 'Active'}
+                           </span>
+                        </div>
+                     </div>
+                  )) : (
+                     <div className="p-12 text-center">
+                        <p className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">No active nodes</p>
+                     </div>
+                  )}
                </div>
             </div>
 
-            {/* Sidebar Command Intelligence */}
+            {/* Compact Insights Sidebar */}
             <div className="space-y-6">
-               <div className="bg-background border border-secondary rounded-[24px] p-6 shadow-sm">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
-                     <Activity className="h-3 w-3 text-accent" /> Strategic Correspondence
+               <div className="bg-background border border-secondary rounded-2xl p-6 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-5 flex items-center gap-2">
+                     <Activity className="h-3 w-3 text-accent" /> Intelligence
                   </h4>
                   <div className="space-y-4">
                      {recentMails.length > 0 ? recentMails.map((mail: any) => (
-                        <div key={mail.id} className="pb-3 border-b border-secondary/50 last:border-0 last:pb-0">
-                           <p className="text-xs font-bold line-clamp-1">{mail.subject}</p>
-                           <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">From: {mail.sender?.full_name || 'System'}</p>
+                        <div key={mail.id} className="group cursor-pointer">
+                           <p className="text-xs font-bold truncate group-hover:text-accent transition-colors">{mail.subject}</p>
+                           <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">From: {mail.sender?.full_name}</p>
                         </div>
                      )) : (
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase py-4">No recent directives</p>
+                        <p className="text-[10px] text-muted-foreground/40 font-bold uppercase py-2">Inbox Clear</p>
                      )}
                   </div>
                </div>
 
-               <div className="bg-background border border-secondary rounded-[24px] p-6 shadow-sm">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
-                     <Video className="h-3 w-3 text-accent" /> Tactical Alignments
+               <div className="bg-background border border-secondary rounded-2xl p-6 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-5 flex items-center gap-2">
+                     <Video className="h-3 w-3 text-accent" /> Briefings
                   </h4>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                      {upcomingMeetings.length > 0 ? upcomingMeetings.map((mtg: any) => (
-                        <div key={mtg.id} className="p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
-                           <p className="text-xs font-bold line-clamp-1">{mtg.title}</p>
-                           <p className="text-[10px] text-accent font-bold uppercase mt-1">
+                        <div key={mtg.id} className="p-3 bg-secondary/20 border border-secondary rounded-xl flex items-center justify-between">
+                           <p className="text-xs font-bold truncate pr-2">{mtg.title}</p>
+                           <p className="text-[9px] text-accent font-black uppercase whitespace-nowrap">
                               {new Date(mtg.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                            </p>
                         </div>
                      )) : (
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase py-4 text-center border border-dashed border-secondary/50 rounded-xl">Idle</p>
+                        <p className="text-[10px] text-muted-foreground/40 font-bold uppercase py-2 text-center border border-dashed border-secondary/50 rounded-xl">Clear Schedule</p>
                      )}
                   </div>
-                  <button onClick={() => window.location.href = '/manager/meetings'} className="w-full mt-4 py-2 bg-foreground text-background text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-accent transition-all">
-                     View Schedule
-                  </button>
                </div>
             </div>
          </div>

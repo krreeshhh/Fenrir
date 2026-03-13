@@ -34,9 +34,10 @@ export default function Chatbot() {
         body: JSON.stringify({ message: userMessage }),
       });
       const data = await resp.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.response }]);
+      setMessages(prev => [...prev, { role: 'bot', text: data.response || "Neural Link Failure." }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: "Error: AI Node disconnected. Please try again." }]);
+      console.error("Chatbot frontend error:", err);
+      setMessages(prev => [...prev, { role: 'bot', text: "Operational Error: AI Cognitive Node disconnected. Please verify connection." }]);
     } finally {
       setIsTyping(false);
     }
@@ -92,7 +93,7 @@ export default function Chatbot() {
                 m.role === 'user' ? "items-end" : "items-start"
               )}>
                 <div className={cn(
-                  "max-w-[88%] p-5 rounded-xl text-[13px] font-bold leading-relaxed shadow-sm border transition-all",
+                  "max-w-[92%] p-5 rounded-2xl text-[13px] font-medium leading-relaxed shadow-sm border transition-all whitespace-pre-wrap text-left",
                   m.role === 'user'
                     ? "bg-foreground text-background self-end rounded-tr-none border-foreground shadow-lg"
                     : "bg-secondary/40 text-foreground self-start rounded-tl-none border-secondary/50 backdrop-blur-md"
@@ -104,7 +105,7 @@ export default function Chatbot() {
             {isTyping && (
               <div className="flex items-center gap-3 p-4 bg-accent/5 rounded-xl rounded-tl-none w-fit border border-accent/20 animate-pulse">
                 <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-accent">Analyzing Nodal Data...</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-accent">PIVOT Syncing...</span>
               </div>
             )}
           </div>
