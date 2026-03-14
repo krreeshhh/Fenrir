@@ -1,14 +1,18 @@
 "use client"
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ShieldAlert, ArrowLeft, RefreshCw } from "lucide-react";
 
 export default function AuthCodeError() {
+  const searchParams = useSearchParams();
+  const errorMessage = searchParams.get('error') || "The operational handshake between the authentication provider and our backend node has encountered a critical failure.";
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         {/* Background Decoration */}
-        <div className="absolute top-1/4 -right-1/4 w-3/4 h-3/4 bg-red-500/10 rounded-full blur-[120px] select-none -z-10"></div>
-        <div className="absolute -bottom-1/4 -left-1/4 w-3/4 h-3/4 bg-orange-500/10 rounded-full blur-[100px] select-none -z-10"></div>
+        <div className="absolute top-1/4 -right-1/4 w-3/4 h-3/4 bg-red-500/10 rounded-full blur-[60px] select-none -z-10"></div>
+        <div className="absolute -bottom-1/4 -left-1/4 w-3/4 h-3/4 bg-orange-500/10 rounded-full blur-[40px] select-none -z-10"></div>
 
         <div className="w-full max-w-2xl text-center space-y-12">
             <div className="inline-flex items-center justify-center p-8 bg-red-50 text-red-600 rounded-[48px] shadow-2xl animate-bounce">
@@ -20,7 +24,7 @@ export default function AuthCodeError() {
                     Code <span className="text-red-600">Sync Failure</span>
                 </h1>
                 <p className="text-muted-foreground font-medium text-xl leading-relaxed max-w-lg mx-auto">
-                    The operational handshake between the authentication provider and our backend node has encountered a critical failure.
+                    {errorMessage}
                 </p>
             </div>
 

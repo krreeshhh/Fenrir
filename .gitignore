@@ -42,3 +42,19 @@ next-env.d.ts
 
 /tmp
 /Assets
+
+# mobile platforms
+/android/
+/ios/
+
+# local scratch scripts & outputs
+check-tables.mjs
+fetch-schema.mjs
+q.mjs
+read-schema.mjs
+seed-new-data.mjs
+seed-output.txt
+table-checks.txt
+openapi-spec.json
+schema-summary.json
+*.tsbuildinfo
