@@ -18,9 +18,19 @@ export default function CapacitorHandler() {
       App.addListener('appUrlOpen', async (event: any) => {
         const url = new URL(event.url)
         
-        // Handle auth success: com.pivot.app://auth/success?role=employee
+        // Handle auth success: com.pivot.app://auth/success?role=employee&access_token=...&refresh_token=...
         if (url.host === 'auth' && url.pathname === '/success') {
           const role = url.searchParams.get('role') || 'employee'
+          const accessToken = url.searchParams.get('access_token')
+          const refreshToken = url.searchParams.get('refresh_token')
+
+          if (accessToken && refreshToken) {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            })
+          }
+
           router.push(`/${role}`)
           return;
         }

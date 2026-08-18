@@ -32,9 +32,31 @@ export default function LoginPage() {
        (window as any).Capacitor?.platform ||
        (window as any).webkit?.messageHandlers?.bridge);
 
-    // We ALWAYS use the web redirect even on mobile to avoid PKCE origin issues.
-    // The server will then bridge us back to the app scheme.
-    const redirectUrl = `${window.location.origin}/auth/callback${isCapacitor ? '?source=app' : ''}`;
+    if (isCapacitor) {
+      try {
+        // We use dynamic import for Capacitor plugins to avoid issues on pure web
+        const { Browser } = await import('@capacitor/browser');
+        
+        // We open our server-side login route in the system browser.
+        // This ensures the PKCE cookie is set in the browser's context, 
+        // not the app's restricted webview context.
+        const origin = window.location.origin;
+        await Browser.open({ 
+          url: `${origin}/auth/login?source=app&provider=google` 
+        });
+        
+        // We don't set loading to null here because the browser just opened
+        return;
+      } catch (err) {
+        console.error("Capacitor Browser error:", err);
+        setError("Could not open system browser for authentication.");
+        setLoading(null);
+        return;
+      }
+    }
+
+    // Web-only direct flow (standard PKCE)
+    const redirectUrl = `${window.location.origin}/auth/callback`;
 
     await supabase.auth.signInWithOAuth({
       provider: 'google',

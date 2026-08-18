@@ -9,10 +9,16 @@ export default function AuthSuccessBridge() {
   const router = useRouter();
   const [counting, setCounting] = useState(3);
   const role = searchParams.get('role') || 'employee';
+  const accessToken = searchParams.get('access_token');
+  const refreshToken = searchParams.get('refresh_token');
 
   useEffect(() => {
     // 1. Try to redirect immediately using the custom scheme
-    const appUrl = `com.pivot.app://auth/success?role=${role}`;
+    // We pass the tokens so the app can set its own session
+    let appUrl = `com.pivot.app://auth/success?role=${role}`;
+    if (accessToken && refreshToken) {
+      appUrl += `&access_token=${accessToken}&refresh_token=${refreshToken}`;
+    }
     
     // Check if we are in a mobile context
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -36,10 +42,14 @@ export default function AuthSuccessBridge() {
         // If somehow reached on desktop, just go to dashboard
         router.push(`/${role}`);
     }
-  }, [role, router]);
+  }, [role, router, accessToken, refreshToken]);
 
   const handleManualRedirect = () => {
-    window.location.href = `com.pivot.app://auth/success?role=${role}`;
+    let appUrl = `com.pivot.app://auth/success?role=${role}`;
+    if (accessToken && refreshToken) {
+      appUrl += `&access_token=${accessToken}&refresh_token=${refreshToken}`;
+    }
+    window.location.href = appUrl;
   };
 
   return (

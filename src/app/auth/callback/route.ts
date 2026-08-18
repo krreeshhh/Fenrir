@@ -9,9 +9,9 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && session) {
+      const user = session.user
       if (user) {
         // Fetch role to redirect to correct dashboard
         const { data: profile } = await supabase
@@ -34,14 +34,17 @@ export async function GET(request: Request) {
 
         if (isMobile || isAppSource) {
           // Redirect to a specialized bridge page that handles the jump back to the app
-          return NextResponse.redirect(`${origin}/auth/success?role=${rolePath}`)
+          // We include the tokens to sync them back to the Capacitor local storage
+          const tokens = `&access_token=${session.access_token}&refresh_token=${session.refresh_token}`
+          return NextResponse.redirect(`${origin}/auth/success?role=${rolePath}${tokens}`)
         }
 
         return NextResponse.redirect(`${origin}/${rolePath}`)
       }
     } else {
       console.error('Auth exchange error:', error)
-      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
+      const message = error?.message || 'Handshake synchronization failed'
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(message)}`)
     }
   }
 
